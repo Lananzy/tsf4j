@@ -1,0 +1,65 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: tcltapi - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\HARDWA~1\LOCALS~1\Temp\RSP20F.tmp" with contents
+[
+/nologo /MD /W3 /GX /O2 /I "..\..\..\..\..\..\include" /I "..\..\..\..\..\..\include\apps\tcltapi" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "TDR_WITH_XML" /D "TSF4G_STATIC" /Fp"Release/tcltapi.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"X:\tsf4g\apps\tconnd\tcltapi\tcltapi.c"
+"X:\tsf4g\apps\tconnd\tcltapi\tqqapi.c"
+"X:\tsf4g\apps\tconnd\tcltapi\tqqapidef.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\HARDWA~1\LOCALS~1\Temp\RSP20F.tmp" 
+Creating command line "link.exe -lib /nologo /out:"..\..\..\..\..\..\win32_lib\vc6\release\tcltapi.lib"  .\Release\tcltapi.obj .\Release\tqqapi.obj .\Release\tqqapidef.obj "
+<h3>Output Window</h3>
+Compiling...
+tcltapi.c
+tqqapi.c
+X:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1028) : warning C4090: '=' : different 'const' qualifiers
+X:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1356) : warning C4090: 'function' : different 'const' qualifiers
+X:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1356) : warning C4024: 'tqqapi_get_buffer' : different types for formal and actual parameter 3
+X:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1390) : warning C4090: 'function' : different 'const' qualifiers
+X:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1390) : warning C4024: 'tqqapi_get_buffer' : different types for formal and actual parameter 3
+tqqapidef.c
+Creating library...
+
+
+
+<h3>Results</h3>
+tcltapi.lib - 0 error(s), 5 warning(s)
+<h3>
+--------------------Configuration: tcltapi - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\HARDWA~1\LOCALS~1\Temp\RSP210.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "..\..\..\..\..\..\include" /I "..\..\..\..\..\..\include\apps\tcltapi" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "TDR_WITH_XML" /D "TSF4G_STATIC" /Fp"Debug/tcltapi.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"X:\tsf4g\apps\tconnd\tcltapi\tcltapi.c"
+"X:\tsf4g\apps\tconnd\tcltapi\tqqapi.c"
+"X:\tsf4g\apps\tconnd\tcltapi\tqqapidef.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\HARDWA~1\LOCALS~1\Temp\RSP210.tmp" 
+Creating command line "link.exe -lib /nologo /out:"..\..\..\..\..\..\win32_lib\vc6\debug\tcltapi_d.lib"  .\Debug\tcltapi.obj .\Debug\tqqapi.obj .\Debug\tqqapidef.obj "
+<h3>Output Window</h3>
+Compiling...
+tcltapi.c
+tqqapi.c
+x:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1028) : warning C4090: '=' : different 'const' qualifiers
+x:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1356) : warning C4090: 'function' : different 'const' qualifiers
+x:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1356) : warning C4024: 'tqqapi_get_buffer' : different types for formal and actual parameter 3
+x:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1390) : warning C4090: 'function' : different 'const' qualifiers
+x:\tsf4g\apps\tconnd\tcltapi\tqqapi.c(1390) : warning C4024: 'tqqapi_get_buffer' : different types for formal and actual parameter 3
+tqqapidef.c
+Creating library...
+
+
+
+<h3>Results</h3>
+tcltapi_d.lib - 0 error(s), 5 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,46 @@
+#  @file $RCSfile: Makefile.real,v $
+#  general description of this module
+#  $Id: Makefile.real,v 1.2 2008/12/09 03:12:45 hardway Exp $
+#  @author $Author: hardway $
+#  @date $Date: 2008/12/09 03:12:45 $
+#  @version $Revision: 1.2 $
+#  @note Editor: Vim 6.1, Gcc 4.0.1, tab=4
+#  @note Platform: Linux
+#
+
+include ../../../tsf4g.mk
+
+APP_NAME=tcltapi
+
+APP_CFILE=$(wildcard *.c)
+APP_OBJ=$(APP_CFILE:.c=.o)
+APP_EXE=$(APP_NAME)
+APP_LIB=$(TSF4G_LIB)/lib$(APP_NAME).a
+APP_SO=$(TSF4G_LIB)/lib$(APP_NAME).so
+#APP_EXE=$(TSF4G_LIB)/$(APP_NAME)
+
+TCONNAPI_LIBS =  -L $(TSF4G_LIB)  $(TSF4G_LIB)/libtsec.a $(TSF4G_LIB)/libtlog.a  $(TSF4G_LIB)/libtdr_xml.a $(TSF4G_LIB)/libpal.a -lscew -lexpat -lpthread
+.PHONY: all clean
+
+all: $(APP_LIB) $(APP_SO)
+
+-include $(APP_CFILE:.c=.d)
+
+%.d: %.c
+	$(CC) -MM $(CFLAGS) $< -o $@
+
+%.o: %.c %.d
+	$(CC) -c $(CFLAGS) $(DEBUG) $<
+
+$(APP_LIB):	$(APP_OBJ)
+	ar r $(APP_LIB) $^
+
+$(APP_SO): $(APP_OBJ)
+	$(CC) -o $(APP_SO) $(SHARED) $(CFLAGS) $(DEBUG) $^  $(TCONNAPI_LIBS)
+
+#$(APP_EXE): $(APP_OBJ)
+#	$(CC) -o $(APP_EXE) $(CFLAGS) $(DEBUG) $^ $(TCONNAPI_LIBS)
+clean:
+	$(RM) *.o  *.d
+	$(RM) $(APP_LIB) $(APP_SO)
+

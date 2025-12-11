@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<metalib tagsetversion="1" name="CSPKG" version="10" >
+       <macro name="PACKAGE_DATA_LEN" value="2048" />
+       
+
+	<macro name="CMD_LOGIN" value="1" />
+	<macro name="CMD_LOGOUT" value="2" />
+       <macro name="CMD_HELLO" value="3" />
+  
+
+	<struct name="samplehead" version="10" >
+		<entry name="version" type="smalluint" />
+		<entry name="cmd" type="smalluint" />
+		<entry name="headlen" type="smalluint" />
+		<entry name="bodylen" type="smalluint" />
+	</struct>
+	
+
+	<struct name="samplelogin" version="10" >
+		<entry name="uin" type="int" />
+	</struct>
+
+	<struct name="samplelogout" version="10" >
+		<entry name="uin" type="int" />
+	</struct>
+	
+	<struct name="samplehello" version="10" >
+		<entry name="uin" type="int" />
+		<entry name="data" type="string" size="PACKAGE_DATA_LEN"  />
+	</struct>
+
+	<union name="samplebody" version="10" >
+		<entry name="login" type="samplelogin" id="CMD_LOGIN" />
+		<entry name="logout" type="samplelogout" id="CMD_LOGOUT" />
+		<entry name="hello" type="samplehello" id="CMD_HELLO" />
+	</union>
+
+
+
+	<struct name="CSPKG" version="10" >
+		<entry name="head" type="samplehead" sizeinfo="this.headlen" />
+		<entry name="body" type="samplebody" select="head.cmd" sizeinfo="head.bodylen" />
+	</struct>
+		
+</metalib>

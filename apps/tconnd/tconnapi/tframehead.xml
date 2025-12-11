@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<metalib tagsetversion="1" name="tframehead" version="10" >
+
+	<!-- the follow is the command used by tconnd to distinguish the msg  -->
+	<macro name="TFRAMEHEAD_CMD_START" value="0" />
+	<macro name="TFRAMEHEAD_CMD_STOP" value="1" />
+	<macro name="TFRAMEHEAD_CMD_INPROC" value="2" />
+	<macro name="TFRAMEHEAD_CMD_RELAY" value="3" />
+	<macro name="TFRAMEHEAD_CMD_NOTIFY" value="4" />
+	<!-- end the difinition of the command -->
+
+	<macro name="TFRAMEHEAD_MAX_BATCH_IDENT" value="512" />
+
+	<macro name="TFRAMEHEAD_EXTRA_IP" value="1" />
+	<macro name="TFRAMEHEAD_TIMESTAMP_TIMEVAL" value="1" />
+  <macrosgroup name="TFRAMEHEAD_STOP_REASON" >
+      <macro name="TFRAMEHEAD_REASON_NONE" value="0" />
+      <!-- the follow definiton is from tconnd to server  -->	
+    	<macro name="TFRAMEHEAD_REASON_IDLE_CLOSE"   value="1" />
+    	<macro name="TFRAMEHEAD_REASON_PEER_CLOSE"   value="2" />
+    	<macro name="TFRAMEHEAD_REASON_NETWORK_FAIL" value="3" />
+    	<macro name="TFRAMEHEAD_REASON_BAD_PKGLEN"   value="4" />
+    	<macro name="TFRAMEHEAD_REASON_TCONND_SHUTDOWN" value="6" />
+    	<macro name="TFRAMEHEAD_REASON_SELF_CLOSE"   value="7" />
+    	<macro name="TFRAMEHEAD_REASON_AUTH_FAIL"    value="8" />
+    	<macro name="TFRAMEHEAD_REASON_TRANS_LOST"   value="9" />
+    	<macro name="TFRAMEHEAD_REASON_ENC_NOSUP"    value="10" />
+    	<!-- the follow definiton is from server to tconnd  -->	
+    	<macro name="TFRAMEHEAD_REASON_SVR_CLOSE"    value="11" />
+    	<macro name="TFRAMEHEAD_REASON_SVR_KICKOFF"  value="12" />
+    	<macro name="TFRAMEHEAD_REASON_CLI_RELOGIN"  value="13" />
+    	<macro name="TFRAMEHEAD_REASON_CLI_LOGOUT"   value="14" />
+	    <macro name="TFRAMEHEAD_REASON_SVR_RESV"     value="100" />
+ </macrosgroup>	
+ 
+  <macrosgroup name="TFRAMEHEAD_RELAYTYPE" >
+      <macro name="TFRAMEHEAD_JUMP_SERVER_RELAY"       value="1" />
+      <macro name="TFRAMEHEAD_NETWORK_FAILURE_RELAY"   value="2" />
+      <macro name="TFRAMEHEAD_CLIENT_CRASH_RELAY"      value="3" />
+ 
+	</macrosgroup>	
+	<macro name="TFRAMEHEAD_CONNECTKEY_LEN" value="16" />
+	<macro name="TFRAMEHEAD_IDENTITY_LEN" value="16" />
+	
+	
+
+	<struct name="TIPInfo" version="10" >
+		<entry name="family" type="short" />
+		<entry name="port" type="ushort" />
+		<entry name="ip" type="ip" />
+	</struct>
+
+	<union name="TFrameHeadData" version="10" >
+		<entry name="IPInfo" type="TIPInfo" id="TFRAMEHEAD_EXTRA_IP" />
+	</union>
+
+	<struct name="TFrameAuthQQ" version="10" >
+		<entry name="Uin" type="long" />
+	</struct>
+
+	<union name="TFrameAuthData" version="10" >
+		<entry name="AuthQQV1"      type="TFrameAuthQQ" id="TSEC_AUTH_QQV1" />
+		<entry name="AuthQQV2"      type="TFrameAuthQQ" id="TSEC_AUTH_QQV2" />
+		<entry name="AuthQQUnified" type="TFrameAuthQQ" id="TSEC_AUTH_QQUNIFIED" />
+	</union>
+
+	<struct name="TFrameCmdStart" version="10" >
+		<entry name="AuthType" type="int" bindmacrosgroup="TSEC_AUTH" />
+		<entry name="AuthData" type="TFrameAuthData" select="AuthType" />
+	</struct>
+
+	<struct name="TFrameCmdStop" version="10" >
+		<entry name="Reason" type="int" />
+	</struct>
+
+	<struct name="TFrameIdent" version="10" >
+		<entry name="ID" type="int" />
+		<entry name="ConnIdx" type="int" />
+	</struct>
+
+	<struct name="TFrameCmdInProc" version="10" >
+		<entry name="Valid" type="tinyint" />
+		<entry name="NoEnc" type="tinyint" />
+		<entry name="Count" type="short" />
+		<entry name="Idents" type="TFrameIdent" count="TFRAMEHEAD_MAX_BATCH_IDENT" refer="Count" />
+	</struct>
+
+	<struct name="TFrameCmdRelay" version="10" >
+	  <entry name="Uin" type="long" />
+	  <entry name="RelayType" type="int" />
+		<entry name="Old" type="TFrameIdent" />
+		<entry name="New" type="TFrameIdent" />
+	</struct>
+	
+	<struct name="TFrameCmdNotify" version="10" >
+	  <entry name="Uin" type="long" />
+		<entry name="ConnKey" type="tinyint" count="TFRAMEHEAD_CONNECTKEY_LEN" />
+		<entry name="Identity" type="tinyint" count="TFRAMEHEAD_IDENTITY_LEN" />
+	</struct>
+	
+	
+
+	<union name="TFrameCmdData" version="10" >
+		<entry name="Start" type="TFrameCmdStart" id="TFRAMEHEAD_CMD_START" />
+		<entry name="Relay" type="TFrameCmdRelay" id="TFRAMEHEAD_CMD_RELAY" />
+		<entry name="Stop" type="TFrameCmdStop" id="TFRAMEHEAD_CMD_STOP" />
+		<entry name="Notify" type="TFrameCmdNotify" id="TFRAMEHEAD_CMD_NOTIFY" />
+		<entry name="InProc" type="TFrameCmdInProc" id="TFRAMEHEAD_CMD_INPROC" />
+	</union>
+
+	<struct name="TTimeVal" version="10" >
+		<entry name="sec" type="int" />
+		<entry name="usec" type="int" />
+	</struct>
+
+	<union name="TTimeStampData" version="10" >
+		<entry name="TimeVal" type="TTimeVal" id="TFRAMEHEAD_TIMESTAMP_TIMEVAL" />
+	</union>
+
+	<struct name="tframehead" version="10" >
+		<entry name="Ver" type="tinyint" />
+		<entry name="Cmd" type="tinyint" />
+		<entry name="ExtraType" type="tinyint" />
+		<entry name="TimeStampType" type="tinyint" />
+		<entry name="ID" type="int" />
+		<entry name="ConnIdx" type="int" />
+		<entry name="ExtraInfo" type="TFrameHeadData" select="ExtraType" />
+		<entry name="TimeStamp" type="TTimeStampData" select="TimeStampType" />
+		<entry name="CmdData" type="TFrameCmdData" select="Cmd" />
+	</struct>
+
+</metalib>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!-- This file is for tsf4g-tsec module -->
+
+<metalib tagsetversion="1" name="tsec" version="1.0">
+
+  <struct name="TsecConf" version="1.0">
+    <entry name="FuncFile" type="string" size="256" />
+  </struct>
+
+</metalib>
+

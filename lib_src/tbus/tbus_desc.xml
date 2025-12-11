@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="gb2312" standalone="yes" ?>
+<!-- This file is for tbus routes tool application-->
+
+<metalib tagsetversion="1" name="TbusConf" version="2">
+
+  
+ 
+  <struct name="RouteInfo" version="1" >
+    <entry name="Priority"    type="uint" />
+    <entry name="Key"         type="uint" />
+    <entry name="UpAddr"      type="string" size="TBUS_MAX_ADDR_STRING_LEN" desc="address string,format: xxx.xxx.xxx.xxx" />
+    <entry name="DownAddr"    type="string" size="TBUS_MAX_ADDR_STRING_LEN"  desc="same as UpAddr"/>
+    <entry name="UpSize"      type="uint"   desc="in bytes" />
+    <entry name="DownSize"    type="uint"   desc="in bytes" />
+    <entry name="Desc"        type="string" size="TBUS_MAX_DESC_STRING_LEN" />
+  </struct>
+
+  <struct name="TbusMgr" version="1">
+    <entry name="RoutesShmKey" type="uint" />
+    <entry name="TotalCnt" type="uint" />
+
+    <entry name="UsedCnt" type="uint" />
+    <entry name="Routes"  type="RouteInfo" count="TBUS_MAX_CHANNEL_NUM_PREHOST" refer="UsedCnt" />
+  </struct>
+  
+
+
+  <struct name="TbusGCIM" version="1">
+    <entry name="ChannelDataAlign" type="int"  defaultvalue="TBUS_DEFAULT_CHANNEL_DATA_ALIGN"
+         desc="指定通道中消息存储时字节对齐方式" />
+    <entry name="BussinessID" type="int" defaultvalue="TBUS_DEFAUL_BUSSINESS_ID" desc="bussiness id for appications using this bus system" />
+    <entry name="AddrTemplet" type="string" size="TBUS_MAX_ADDR_TEMPLET_STRING_LEN" defaultvalue="8.8.8.8" desc="templet of address string" />
+    <entry name="GCIMShmKey" type="string" size="TBUS_MAX_KEY_STRING_LEN" defaultvalue="1688" />
+    
+    <entry name="Count" type="uint" />
+    <entry name="Channels"  type="ChannelCnf" count="TBUS_MAX_CHANNEL_NUM_PREHOST" refer="Count" />
+  </struct>
+
+  
+  <struct name="RelayMnger" version="1.0">
+    <entry name="BussinessID" type="int" defaultvalue="0" desc="bussiness id for appications using this bus system" />
+    <entry name="AddrTemplet" type="string" size="TBUS_MAX_ADDR_TEMPLET_STRING_LEN" defaultvalue="8.8.8.8" desc="templet of address string" />
+    <entry name="RelayShmKey" type="string" size="TBUS_MAX_KEY_STRING_LEN" defaultvalue="2688" />
+    <entry name="UsedCnt" type="uint" />
+    <entry name="Relays"  type="ShmRelay" count="TBUS_MAX_RELAY_NUM_PREHOST" refer="UsedCnt" />
+  </struct>
+  
+  
+</metalib>

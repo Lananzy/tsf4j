@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!-- This file is for tbus relay application -->
+
+<RelayMnger>
+  <BussinessID>0</BussinessID>
+  <AddrTemplet>8.8.8.8</AddrTemplet>
+  <RelayShmKey>2688</RelayShmKey>
+  <TotalCnt>1024</TotalCnt>
+
+  <Relays>
+    <Addr>10.1.1.1</Addr>  <!-- ip format: xxx.xxx.xxx.xxx, primary key, should be unique in share memory -->
+    <Priority>8</Priority>
+    <MConn>tcp://10.1.44.61:1027</MConn>  <!-- master connection information -->
+    <Strategy>1</Strategy> <!-- strategy between master and slave connection, not implemented yet -->
+    <Desc>Some description for this relay</Desc>
+  </Relays>
+
+</RelayMnger>
+

@@ -1,0 +1,51 @@
+#  @file $RCSfile: Makefile.real,v $
+#  general description of this module
+#  $Id: Makefile.real,v 1.3 2009/03/03 09:19:08 sean Exp $
+#  @author $Author: sean $
+#  @date $Date: 2009/03/03 09:19:08 $
+#  @version $Revision: 1.3 $
+#  @note Editor: Vim 6.1, Gcc 4.0.1, tab=4
+#  @note Platform: Linux
+#
+
+include ../../../../tsf4g.mk
+
+APP_NAME=mod_tconnd.so
+
+APP_CFILE=$(wildcard *.c)
+APP_OBJ=$(APP_CFILE:.c=.o)
+APP_EXE=$(APP_NAME)
+#APP_EXE=$(TSF4G_LIB)/$(APP_NAME)
+
+TCONND_FLAGS= $(CFLAGS)  -I$(TSF4G_LIBSRC)
+TCONND_IMPORT_LIBS= $(LDPATH) $(TSF4G_LIB)/libtapp.a $(TSF4G_LIB)/libtcltapi.a $(TSF4G_LIB)/libtsec.a $(TSF4G_LIB)/libtloghelp.a $(TSF4G_LIB)/libtmng.a \
+	  $(TSF4G_LIB)/libtbus.a  $(TSF4G_LIB)/libtconnapi.a $(TSF4G_LIB)/libtlog.a $(TSF4G_LIB)/libtdr_xml.a \
+	$(TSF4G_LIB)/libtagentapi.a $(TSF4G_LIB)/libcenterdapi.a $(TSF4G_LIB)/libpal.a $(TSF4G_LIB)/libcomm.a -Wl,-Bstatic -lscew -lexpat -Wl,-Bdynamic  -lpthread
+
+ifeq ($(withobus), yes)
+	TCONND_IMPORT_LIBS += $(TSF4G_LIB)/libobus.a
+endif
+
+.PHONY: all clean
+
+all: $(APP_EXE) install
+
+-include $(APP_CFILE:.c=.d)
+
+%.d: %.c
+	$(CC) -MM $(TCONND_FLAGS) $< -o $@
+
+%.o: %.c %.d
+	$(CC) -c $(TCONND_FLAGS) $<
+
+$(APP_EXE): $(APP_OBJ)
+	$(CC) -shared -o $(APP_EXE) $(TCONND_FLAGS)  $^ $(TCONND_IMPORT_LIBS)
+	
+install:    
+	cp $(APP_NAME) ../../../tagent/lib/
+	
+clean:
+	$(RM) *.o  *.d
+	$(RM) $(APP_EXE)
+	$(RM) gmon.out
+

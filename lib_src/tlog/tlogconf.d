@@ -1,0 +1,1 @@
+tlogconf.o: tlogconf.c

@@ -1,0 +1,84 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tdr", "tools_proj\tdrtools\tdr.vcproj", "{4E8D0A98-8DAD-410A-B5EF-E9DE10873A5A}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtdr_xml_static", "lib_proj\libtdr\libtdr_xml.vcproj", "{3E3771AC-141D-4AD4-98EC-43EFD2DD9081}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtdr_dbms_xml_static", "lib_proj\libtdr\libtdr_dbms_xml.vcproj", "{6B151CDE-CCF0-40EC-9A05-B5E587C37538}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtdr_static", "lib_proj\libtdr\libtdr.vcproj", "{56437121-2D97-45A3-96EF-98FC9088D5D5}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tdr2xml", "tools_proj\tdrtools\dr2xml.vcproj", "{25BDC689-F36B-4760-A407-011276901B2C}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "meta2tab", "tools_proj\tdrtools\meta2tab.vcproj", "{E99EF15F-6F11-48ED-8BE6-82C9AEA7D086}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ut_tdr", "unittests_proj\ut_tdr\ut_tdr.vcproj", "{5EB5B279-0EE5-4EF8-98C1-8AA96A0244EB}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E8D0A98-8DAD-410A-B5EF-E9DE10873A5A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4E8D0A98-8DAD-410A-B5EF-E9DE10873A5A}.Debug|Win32.Build.0 = Debug|Win32
+		{4E8D0A98-8DAD-410A-B5EF-E9DE10873A5A}.Release|Win32.ActiveCfg = Release|Win32
+		{4E8D0A98-8DAD-410A-B5EF-E9DE10873A5A}.Release|Win32.Build.0 = Release|Win32
+		{3E3771AC-141D-4AD4-98EC-43EFD2DD9081}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3E3771AC-141D-4AD4-98EC-43EFD2DD9081}.Debug|Win32.Build.0 = Debug|Win32
+		{3E3771AC-141D-4AD4-98EC-43EFD2DD9081}.Release|Win32.ActiveCfg = Release|Win32
+		{3E3771AC-141D-4AD4-98EC-43EFD2DD9081}.Release|Win32.Build.0 = Release|Win32
+		{6B151CDE-CCF0-40EC-9A05-B5E587C37538}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6B151CDE-CCF0-40EC-9A05-B5E587C37538}.Debug|Win32.Build.0 = Debug|Win32
+		{6B151CDE-CCF0-40EC-9A05-B5E587C37538}.Release|Win32.ActiveCfg = Release|Win32
+		{6B151CDE-CCF0-40EC-9A05-B5E587C37538}.Release|Win32.Build.0 = Release|Win32
+		{56437121-2D97-45A3-96EF-98FC9088D5D5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{56437121-2D97-45A3-96EF-98FC9088D5D5}.Debug|Win32.Build.0 = Debug|Win32
+		{56437121-2D97-45A3-96EF-98FC9088D5D5}.Release|Win32.ActiveCfg = Release|Win32
+		{56437121-2D97-45A3-96EF-98FC9088D5D5}.Release|Win32.Build.0 = Release|Win32
+		{25BDC689-F36B-4760-A407-011276901B2C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{25BDC689-F36B-4760-A407-011276901B2C}.Debug|Win32.Build.0 = Debug|Win32
+		{25BDC689-F36B-4760-A407-011276901B2C}.Release|Win32.ActiveCfg = Release|Win32
+		{25BDC689-F36B-4760-A407-011276901B2C}.Release|Win32.Build.0 = Release|Win32
+		{E99EF15F-6F11-48ED-8BE6-82C9AEA7D086}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E99EF15F-6F11-48ED-8BE6-82C9AEA7D086}.Debug|Win32.Build.0 = Debug|Win32
+		{E99EF15F-6F11-48ED-8BE6-82C9AEA7D086}.Release|Win32.ActiveCfg = Release|Win32
+		{E99EF15F-6F11-48ED-8BE6-82C9AEA7D086}.Release|Win32.Build.0 = Release|Win32
+		{5EB5B279-0EE5-4EF8-98C1-8AA96A0244EB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5EB5B279-0EE5-4EF8-98C1-8AA96A0244EB}.Debug|Win32.Build.0 = Debug|Win32
+		{5EB5B279-0EE5-4EF8-98C1-8AA96A0244EB}.Release|Win32.ActiveCfg = Release|Win32
+		{5EB5B279-0EE5-4EF8-98C1-8AA96A0244EB}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,125 @@
+
+Metalib("CSPKG"): Magic: 2d6 Build: 8 ID=-1 ver=10 Metas 6/6 Macros:4/4 
+	 StringBuf<BeginPtr= 4224 EndPtr= 4224 FreeSize=0
+
+Macro Name="PACKAGE_DATA_LEN" id=1024 Desciption: 
+Macro Name="CMD_LOGIN" id=1 Desciption: 
+Macro Name="CMD_LOGOUT" id=2 Desciption: 
+Macro Name="CMD_HELLO" id=3 Desciption: 
+
+Meta(name="samplehead") memsize<956> version<idx:-1, 10, CurVer:10> ID<idx:-1, -1> cnamePtr: -1 descPtr: 
+		 EntriesNum: 4 Type<idx: 1 1> UnitSize<HSize: 8 NSize: 8> Flag: 00000005
+		 idxSizeType: -1 SizeType<NOff: -1 HOff: -1 Unit: 0> ptr: 600
+		 sortKey<Off: -1 ptrMeta: -1 idxEntry: -1> 
+		 iCustomAlign: 1 VersionIndicator<NOff: -1 HOff: -1 Unit: 0> Size<idx: -1 0>
+		 uniqueentryname: true
+		 splittablefactor: 0 splittablekey<HOff: -1, ptr: -1> rule: 0
+	Entry:	Name="version" ID<idx:-1 -1> type<idx: 5 6> version<idx:-1 10>
+		 RealSize<HSize: 2 NSize: 2> CustomUnitSize: -1 Unit<HSize: 2 NSize: 2> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+	Entry:	Name="cmd" ID<idx:-1 -1> type<idx: 5 6> version<idx:-1 10>
+		 RealSize<HSize: 2 NSize: 2> CustomUnitSize: -1 Unit<HSize: 2 NSize: 2> count<idx: -1 1>
+		 HOff: 2 NOff: 2 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+	Entry:	Name="headlen" ID<idx:-1 -1> type<idx: 5 6> version<idx:-1 10>
+		 RealSize<HSize: 2 NSize: 2> CustomUnitSize: -1 Unit<HSize: 2 NSize: 2> count<idx: -1 1>
+		 HOff: 4 NOff: 4 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+	Entry:	Name="bodylen" ID<idx:-1 -1> type<idx: 5 6> version<idx:-1 10>
+		 RealSize<HSize: 2 NSize: 2> CustomUnitSize: -1 Unit<HSize: 2 NSize: 2> count<idx: -1 1>
+		 HOff: 6 NOff: 6 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+
+Meta(name="samplelogin") memsize<380> version<idx:-1, 10, CurVer:10> ID<idx:-1, -1> cnamePtr: -1 descPtr: 
+		 EntriesNum: 1 Type<idx: 1 1> UnitSize<HSize: 4 NSize: 4> Flag: 00000005
+		 idxSizeType: -1 SizeType<NOff: -1 HOff: -1 Unit: 0> ptr: 1556
+		 sortKey<Off: -1 ptrMeta: -1 idxEntry: -1> 
+		 iCustomAlign: 1 VersionIndicator<NOff: -1 HOff: -1 Unit: 0> Size<idx: -1 0>
+		 uniqueentryname: true
+		 splittablefactor: 0 splittablekey<HOff: -1, ptr: -1> rule: 0
+	Entry:	Name="uin" ID<idx:-1 -1> type<idx: 6 7> version<idx:-1 10>
+		 RealSize<HSize: 4 NSize: 4> CustomUnitSize: -1 Unit<HSize: 4 NSize: 4> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+
+Meta(name="samplelogout") memsize<380> version<idx:-1, 10, CurVer:10> ID<idx:-1, -1> cnamePtr: -1 descPtr: 
+		 EntriesNum: 1 Type<idx: 1 1> UnitSize<HSize: 4 NSize: 4> Flag: 00000005
+		 idxSizeType: -1 SizeType<NOff: -1 HOff: -1 Unit: 0> ptr: 1936
+		 sortKey<Off: -1 ptrMeta: -1 idxEntry: -1> 
+		 iCustomAlign: 1 VersionIndicator<NOff: -1 HOff: -1 Unit: 0> Size<idx: -1 0>
+		 uniqueentryname: true
+		 splittablefactor: 0 splittablekey<HOff: -1, ptr: -1> rule: 0
+	Entry:	Name="uin" ID<idx:-1 -1> type<idx: 6 7> version<idx:-1 10>
+		 RealSize<HSize: 4 NSize: 4> CustomUnitSize: -1 Unit<HSize: 4 NSize: 4> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+
+Meta(name="samplehello") memsize<572> version<idx:-1, 10, CurVer:10> ID<idx:-1, -1> cnamePtr: -1 descPtr: 
+		 EntriesNum: 2 Type<idx: 1 1> UnitSize<HSize: 1028 NSize: 5> Flag: 00000004
+		 idxSizeType: -1 SizeType<NOff: -1 HOff: -1 Unit: 0> ptr: 2316
+		 sortKey<Off: -1 ptrMeta: -1 idxEntry: -1> 
+		 iCustomAlign: 1 VersionIndicator<NOff: -1 HOff: -1 Unit: 0> Size<idx: -1 0>
+		 uniqueentryname: true
+		 splittablefactor: 0 splittablekey<HOff: -1, ptr: -1> rule: 0
+	Entry:	Name="uin" ID<idx:-1 -1> type<idx: 6 7> version<idx:-1 10>
+		 RealSize<HSize: 4 NSize: 4> CustomUnitSize: -1 Unit<HSize: 4 NSize: 4> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+	Entry:	Name="data" ID<idx:-1 -1> type<idx: 16 21> version<idx:-1 10>
+		 RealSize<HSize: 1024 NSize: 1> CustomUnitSize: 0 Unit<HSize: 1 NSize: 1> count<idx: -1 1>
+		 HOff: 4 NOff: 4 wFlag: 0x0 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: 6 Noff: -1 HOff: -1 Unit: 4>
+		 IO<idx: -1 0> ptrMeta: -1 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+
+Meta(name="samplebody") memsize<764> version<idx:-1, 10, CurVer:10> ID<idx:-1, -1> cnamePtr: -1 descPtr: 
+		 EntriesNum: 3 Type<idx: 0 0> UnitSize<HSize: 1028 NSize: 5> Flag: 00000004
+		 idxSizeType: -1 SizeType<NOff: -1 HOff: -1 Unit: 0> ptr: 2888
+		 sortKey<Off: -1 ptrMeta: -1 idxEntry: -1> 
+		 splittablefactor: 0 splittablekey<HOff: -1, ptr: -1> rule: 0
+	Entry:	Name="login" ID<idx:1 1> type<idx: 1 1> version<idx:-1 10>
+		 RealSize<HSize: 4 NSize: 4> CustomUnitSize: -1 Unit<HSize: 4 NSize: 4> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x28 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: 1556 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+	Entry:	Name="logout" ID<idx:2 2> type<idx: 1 1> version<idx:-1 10>
+		 RealSize<HSize: 4 NSize: 4> CustomUnitSize: -1 Unit<HSize: 4 NSize: 4> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x28 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: 1936 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+	Entry:	Name="hello" ID<idx:3 3> type<idx: 1 1> version<idx:-1 10>
+		 RealSize<HSize: 1028 NSize: 5> CustomUnitSize: -1 Unit<HSize: 1028 NSize: 5> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x8 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: -1 HOff: -1 Unit: 0>
+		 IO<idx: -1 0> ptrMeta: 2316 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+
+Meta(name="CSPKG") memsize<572> version<idx:-1, 10, CurVer:10> ID<idx:-1, -1> cnamePtr: -1 descPtr: 
+		 EntriesNum: 2 Type<idx: 1 1> UnitSize<HSize: 1036 NSize: 13> Flag: 00000004
+		 idxSizeType: -1 SizeType<NOff: -1 HOff: -1 Unit: 0> ptr: 3652
+		 sortKey<Off: -1 ptrMeta: -1 idxEntry: -1> 
+		 iCustomAlign: 1 VersionIndicator<NOff: -1 HOff: -1 Unit: 0> Size<idx: -1 0>
+		 uniqueentryname: true
+		 splittablefactor: 0 splittablekey<HOff: -1, ptr: -1> rule: 0
+	Entry:	Name="head" ID<idx:-1 -1> type<idx: 1 1> version<idx:-1 10>
+		 RealSize<HSize: 8 NSize: 8> CustomUnitSize: -1 Unit<HSize: 8 NSize: 8> count<idx: -1 1>
+		 HOff: 0 NOff: 0 wFlag: 0x20 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: 4 HOff: 4 Unit: 2>
+		 IO<idx: -1 0> ptrMeta: 600 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+	Entry:	Name="body" ID<idx:-1 -1> type<idx: 0 0> version<idx:-1 10>
+		 RealSize<HSize: 1028 NSize: 5> CustomUnitSize: -1 Unit<HSize: 1028 NSize: 5> count<idx: -1 1>
+		 HOff: 8 NOff: 8 wFlag: 0x0 chDBFlag£º0x0 chOrder: 0 ptrmacrosgroup: -1
+		 Refer<ptrEntry: -1 HOff: -1 Unit: 0> SizeInfo<idxType: -1 Noff: 6 HOff: 6 Unit: 2>
+		 IO<idx: -1 0> ptrMeta: 2888 cnamePtr: -1 descPtr: -1 defualt<Ptr: -1 len 0>
+		 Select<ptrEntry: 980 HOff: 2 Unit: 2> maxID<idx: -1 0> minid<idx: -1 1>
+
+<ID:-1 idx:1  ><ID:-1 idx:2  ><ID:-1 idx:3  ><ID:-1 idx:4  ><ID:-1 idx:5  ><ID:-1 idx:0  >
+<name:CSPKG            idx:5  > <name:samplebody       idx:4  > 
+<name:samplehead       idx:0  > <name:samplehello      idx:3  > 
+<name:samplelogin      idx:1  > <name:samplelogout     idx:2  > 

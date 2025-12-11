@@ -1,0 +1,1 @@
+fcntl.o: fcntl.c

@@ -1,0 +1,72 @@
+<tconnd version="11">
+    <MaxFD>10240 </MaxFD>
+    
+    <TDRList type="TDRList">
+        <Count>1 </Count>
+        <TDRs type="TDR">
+            <Name>default </Name>
+            <Path> ../../etc/protocol/xyz_proto.tdr</Path>
+        </TDRs>
+    </TDRList>
+    
+    <PDUList type="PDUList">
+        <Count>1 </Count>
+        <PDUs type="PDU">
+            <Name>default </Name>
+            <UpSize> 65535 </UpSize>
+			<DownSize> 0 </DownSize>
+            <LenParsertype>PDULENPARSERID_BY_QQ </LenParsertype>
+            <LenParser type="PDULenParser">
+                <QQParser type="PDULenQQParser">
+                    <TDR>default </TDR>
+                    <SendPkg>CSPkg</SendPkg>
+                    <RecvPkg>CSPkg</RecvPkg>
+                    <CheckCltIP> 0 </CheckCltIP>
+                    <SigValidSec>1800</SigValidSec>
+                    <EncMethod>2</EncMethod>
+                    <AuthType>3</AuthType>
+                    <SvrSKeyLen>16</SvrSKeyLen>
+                    <SvrSKey>aaaabbbbccccdddd</SvrSKey>
+					<TestNumEnable>0</TestNumEnable>
+                </QQParser>
+            </LenParser>
+        </PDUs>
+    </PDUList>
+    
+    <ListenerList type="ListenerList">
+        <Count>1 </Count>
+        <Listeners type="Listener">
+            <Name>default </Name>
+            <Url>tcp://10.1.44.61:9001?reuse=1 </Url>
+            <SendBuff>65535 </SendBuff>
+            <RecvBuff>65535 </RecvBuff>
+			<MaxIdle>0</MaxIdle>
+        </Listeners>
+    </ListenerList>
+    
+    <SerializerList type="SerializerList">
+        <Count>1 </Count>
+        <Serializers type="Serializer">
+            <Name>default </Name>
+            <Url>100.1.2.1 </Url>
+        </Serializers>
+    </SerializerList>
+    
+     <NetTransList type="NetTransList">
+        <Count>1 </Count>
+        <NetTrans type="NetTrans">
+            <Name>default </Name>
+            <UseTimeStamp>0 </UseTimeStamp>
+            <UseWaitQueue>1 </UseWaitQueue>
+            <QueueNotifyInterval>1 </QueueNotifyInterval>
+            <PDU>default </PDU>
+            <Listener>default </Listener>
+            <Serializer>default </Serializer>
+            <ConnLimit type="ConnLimit">
+                <MaxConn>0</MaxConn>
+                <Permit>0 </Permit>
+                <Speed>0</Speed>
+            </ConnLimit>
+        </NetTrans>
+    </NetTransList>
+</tconnd>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!-- This file is for tsec ip module -->
+
+<IPACL>
+  <DefaultRule>DENY</DefaultRule>
+
+  <LimitCnt>5</LimitCnt>
+
+  <IPLimit>
+    <Limit>ALLOW</Limit>
+    <SrcIP>127.0.0.1/32</SrcIP>
+    <DstIP></DstIP>
+  </IPLimit>
+
+  <IPLimit>
+    <Limit>DENY</Limit>
+    <SrcIP>127.0.0.1/24</SrcIP>
+    <DstIP></DstIP>
+  </IPLimit>
+
+  <IPLimit>
+    <Limit>20</Limit>
+    <SrcIP>127.0.0.1/32</SrcIP>
+    <DstIP></DstIP>
+  </IPLimit>
+
+  <IPLimit>
+    <Limit>ALLOW</Limit>
+    <SrcIP>127.0.0.1/32</SrcIP>
+    <DstIP>192.0.0.1/32</DstIP>
+  </IPLimit>
+
+  <IPLimit>
+    <Limit>DENY</Limit>
+    <SrcIP>127.0.0.1/24</SrcIP>
+    <DstIP>192.0.0.1/24</DstIP>
+  </IPLimit>
+
+</IPACL>
+

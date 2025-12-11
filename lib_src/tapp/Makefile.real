@@ -1,0 +1,52 @@
+#  @file $RCSfile: Makefile.real,v $
+#  general description of this module
+#  $Id: Makefile.real,v 1.2 2008/12/09 03:36:34 hardway Exp $
+#  @author $Author: hardway $
+#  @date $Date: 2008/12/09 03:36:34 $
+#  @version $Revision: 1.2 $
+#  @note Editor: Vim 6.1, Gcc 4.0.1, tab=4
+#  @note Platform: Linux
+#
+
+include ../../tsf4g.mk
+
+APP_CFILE=$(wildcard *.c)
+APP_OBJ=$(APP_CFILE:.c=.o)
+APP_LIB=$(TSF4G_LIB)/libtapp.a
+APP_SO=$(TSF4G_LIB)/libtapp.so
+
+TAPP_CFALGS= $(CFLAGS)
+TAPP_IMPORT_LIBS= $(TSF4G_LIB)/libtmng.a $(TSF4G_LIB)/libtbus.a  $(TSF4G_LIB)/libtloghelp.a \
+				 $(TSF4G_LIB)/libtlog.a  $(TSF4G_LIB)/libtagentapi.a  $(TSF4G_LIB)/libtdr_xml.a \
+			   	 $(TSF4G_LIB)/libpal.a $(TSF4G_LIB)/libcomm.a  $(TSF4G_XML_LIBS) -lpthread
+
+ifeq ($(withobus), yes)
+	TAPP_IMPORT_LIBS += $(TSF4G_LIB)/libobus.a  
+	TAPP_CFALGS += -D_TAPP_OBUS
+endif
+
+
+.PHONY: all clean
+
+all: $(APP_LIB) $(APP_SO)
+	cp $(APP_OBJ)  $(TSF4G_PACKLIBDIR)
+	
+-include $(APP_CFILE:.c=.d)
+
+%.d: %.c
+	$(CC) -MM $(CFLAGS) $< -o $@
+
+%.o: %.c %.d
+	$(CC) -c $(CFLAGS) $(DEBUG) $<
+
+$(APP_LIB): $(APP_OBJ)
+	ar r $(APP_LIB) $^
+	
+
+$(APP_SO): $(APP_OBJ)
+	$(CC) -o $(APP_SO) $(SHARED) $(TAPP_CFALGS)  $^ $(LDPATH) $(TAPP_IMPORT_LIBS)
+
+clean:
+	$(RM) *.o  *.d
+	$(RM) $(APP_LIB) $(APP_SO)
+

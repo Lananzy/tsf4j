@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<metalib name="" version="10" >
+
+<macro name="TQQ_KEY_LEN" value="16" />
+<macro name="TQQ_MAX_NAME_LEN" value="32" />
+<macro name="TQQ_MAX_IDENT_LEN" value="16" />
+<macro name="TQQ_MAX_SIGN_LEN" value="128" />
+<macro name="TQQ_MAX_SIGN2_LEN" value="64" />
+<macro name="TQQ_IDENT_LEN" value="16" />
+<macro name="TQQ_MAX_USERIDENT_LEN" value="64" />
+<macro name="TQQ_MAX_PASSWD_LEN" value="16" />
+<macro name="TQQ_SVCBITMAP_LEN" value="12" />
+<macro name="TQQ_SVCBITMAP_EXT_LEN" value="8" />
+
+
+<macro name="TQQ_UNIFIED_MAX_SIGN_LEN" value="256" />
+<macro name="TQQ_UNIFIED_MAX_ENCSIGN_LEN" value="128" />
+<macro name="TQQ_UNIFIED_MAX_ENCSIGN2_LEN" value="32" />
+<macro name="TQQ_UNIFIED_CUSTOMINFO_LEN" value="32" />
+
+
+
+
+<struct name="TQQBaseGameSig" version="10" >
+	<entry name="GameKey" type="char" count="TQQ_KEY_LEN" />
+	<entry name="SvcBitmap" type="char" count="TQQ_SVCBITMAP_LEN" />
+	<entry name="SvcBitmapExt" type="char" count="TQQ_SVCBITMAP_EXT_LEN" />
+	<entry name="ValidateBitmap" type="ulong" />
+	<entry name="UinFlag" type="ulong" />
+</struct>
+
+<struct name="TQQGameSig" version="10" >
+	<entry name="GameKey" type="char" count="TQQ_KEY_LEN" />
+	<entry name="SvcBitmap" type="char" count="TQQ_SVCBITMAP_LEN" />
+	<entry name="SvcBitmapExt" type="char" count="TQQ_SVCBITMAP_EXT_LEN" />
+	<entry name="ValidateBitmap" type="ulong" />
+	<entry name="Uin" type="long" />
+	<entry name="Time" type="ulong" />
+	<entry name="UinFlag" type="ulong" />
+</struct>
+
+<struct name="TQQSigForS2" version="10" >
+	<entry name="Type" type="tinyint" />
+	<entry name="ValidateBitmap" type="ulong" />
+	<entry name="Uin" type="long" />
+	<entry name="Time" type="ulong" />
+	<entry name="CltIP" type="ulong" />
+</struct>
+
+<struct name="TQQUserIdent" version="10" >
+	<entry name="Uin" type="long" />
+	<entry name="Pos" type="int" />
+	<entry name="Ident" type="char"  count="TQQ_IDENT_LEN" />
+</struct>
+
+<struct name="TQQUserInfo" version="10" >
+	<entry name="Uin" type="long" />
+	<entry name="Face" type="ushort" />
+	<entry name="Age" type="char" />
+	<entry name="Gender" type="char" />
+	<entry name="NickLen" type="char" />
+	<entry name="Nick" type="char" count="TQQ_MAX_NAME_LEN" refer="NickLen" />
+</struct>
+
+<struct name="TQQUserToken" version="10" >
+	<entry name="Uin" type="long" />
+	<entry name="Pass" type="string" size="TQQ_MAX_PASSWD_LEN" />
+</struct>
+
+<struct name="TQQAuthInfo" version="10" >
+  <entry name="Uin" type="long" />
+	<entry name="SignLen" type="tinyuint"/>
+	<entry name="SignData" type="tinyuint" count="TQQ_MAX_SIGN_LEN" refer="SignLen" />
+	<entry name="Sign2Len" type="tinyuint" />
+	<entry name="Sign2Data" type="tinyuint" count="TQQ_MAX_SIGN2_LEN" refer="Sign2Len" />
+</struct>
+
+
+<struct name="TQQSigInfo" version="10" >
+	<entry name="BaseGameSig" type="TQQBaseGameSig" />
+	<entry name="SignLen" type="tinyuint"/>
+	<entry name="SignData" type="tinyuint" count="TQQ_MAX_SIGN_LEN" refer="SignLen" />
+	<entry name="Sign2Len" type="tinyuint" />
+	<entry name="Sign2Data" type="tinyuint" count="TQQ_MAX_SIGN2_LEN" refer="Sign2Len" />
+	<entry name="UserInfo" type="TQQUserInfo" />
+</struct>
+
+<!--Unified Signature Definition -->
+
+
+
+<struct name="TQQUnifiedSig" version="10" >
+  <entry name="Version" type="short"/>
+	<entry name="Time" type="int"/>	
+	<entry name="EncryptSignLen"  type="short"/>
+	<entry name="EncryptSignData" type="tinyuint" count="TQQ_UNIFIED_MAX_ENCSIGN_LEN" refer="EncryptSignLen" />
+</struct>
+
+<struct name="TQQUnifiedEncrySig" version="10" >
+  <entry name="Random" type="int"/>
+	<entry name="Version" type="short"/>	
+	<entry name="uin"  type="uint"/>
+	<entry name="Time" type="int" />
+	<entry name="SSOver" type="int" />
+	<entry name="AppID" type="int" />
+	<entry name="AppClientVer" type="int" />
+	<entry name="ClientIP" type="int" />
+	<entry name="SessionKey" type="tinyuint" count="TQQ_KEY_LEN" />
+	<entry name="UnifiedSig2Len" type="short" />
+	<entry name="UnifiedSig2" type="tinyuint"  count="TQQ_UNIFIED_MAX_ENCSIGN2_LEN" refer="UnifiedSig2Len" />
+	<entry name="CustomInfoLen" type="short" />
+	<entry name="CustomInfoData" type="tinyuint"  count="TQQ_UNIFIED_CUSTOMINFO_LEN" refer="CustomInfoLen" />
+</struct>
+
+<struct name="TQQUnifiedAuthInfo" version="10" >
+  <entry name="Uin"      type="long"/>
+  <entry name="Len"      type="tinyuint"/>
+  <entry name="SigInfo"  type="tinyuint" count="TQQ_UNIFIED_MAX_SIGN_LEN" refer="Len" />
+</struct>
+
+
+
+
+</metalib>
+
+

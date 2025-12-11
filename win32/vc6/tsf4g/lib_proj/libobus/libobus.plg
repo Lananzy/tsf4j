@@ -1,0 +1,42 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: libobus - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\STEVE~1.TEN\LOCALS~1\Temp\RSPCD.tmp" with contents
+[
+/nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"Debug/libobus.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ  /c 
+"E:\tsf4gcopy\tsf4g\src\obus\oi_misc.c"
+"E:\tsf4gcopy\tsf4g\src\obus\oi_str.c"
+"E:\tsf4gcopy\tsf4g\src\obus\og_bus.c"
+"E:\tsf4gcopy\tsf4g\src\obus\og_channel.c"
+"E:\tsf4gcopy\tsf4g\src\obus\og_ini.c"
+"E:\tsf4gcopy\tsf4g\src\obus\oi_cistr.c"
+"E:\tsf4gcopy\tsf4g\src\obus\oi_log.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\STEVE~1.TEN\LOCALS~1\Temp\RSPCD.tmp" 
+Creating command line "link.exe -lib /nologo /out:"Debug\libobus.lib"  .\Debug\oi_misc.obj .\Debug\oi_str.obj .\Debug\og_bus.obj .\Debug\og_channel.obj .\Debug\og_ini.obj .\Debug\oi_cistr.obj .\Debug\oi_log.obj "
+<h3>Output Window</h3>
+Compiling...
+oi_misc.c
+oi_str.c
+og_bus.c
+og_channel.c
+og_ini.c
+oi_cistr.c
+e:\tsf4gcopy\tsf4g\src\obus\og_ini.c(38) : warning C4761: integral size mismatch in argument; conversion supplied
+e:\tsf4gcopy\tsf4g\src\obus\og_ini.c(88) : warning C4761: integral size mismatch in argument; conversion supplied
+e:\tsf4gcopy\tsf4g\src\obus\og_ini.c(99) : warning C4761: integral size mismatch in argument; conversion supplied
+oi_log.c
+Creating library...
+
+
+
+<h3>Results</h3>
+libobus.lib - 0 error(s), 3 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<metalib tagsetversion="1" name="tdump" version="1" >
+
+<macro name="TDUMP_NAME_LEN" value="32" />
+<macro name="TDUMP_PATH_LEN" value="128" />
+<macro name="TDUMP_MAX_LIB" value="32" />
+<macro name="TDUMP_MAX_MAP" value="1024" />
+
+<struct name="TDumpLib" version="1" >
+	<entry name="Name" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="Path" type="string" size="TDUMP_PATH_LEN" />
+</struct>
+
+<struct name="TDumpLibList" version="1" >
+	<entry name="Count" type="int" />
+	<entry name="Libs" type="TDumpLib" count="TDUMP_MAX_LIB" refer="Count" />
+</struct>
+
+<struct name="TDumpMap" version="1" >
+	<entry name="Type" type="int" />
+	<entry name="Meta" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="Lib" type="string" size="TDUMP_NAME_LEN" />
+</struct>
+
+<struct name="TDumpMapList" version="1" >
+	<entry name="Count" type="int" />
+	<entry name="Maps" type="TDumpMap" count="TDUMP_MAX_MAP" refer="Count" />
+</struct>
+
+<struct name="TDumpWrapper" version="1" >
+	<entry name="Meta" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="Lib" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="HeadLen" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="BodyLen" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="PkgLen" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="MsgID" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="MsgCls" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="MsgTime" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="MsgType" type="string" size="TDUMP_NAME_LEN" />
+	<entry name="MsgVer" type="string" size="TDUMP_NAME_LEN" />
+</struct>
+
+<struct name="TDumpConf" version="1" >
+	<entry name="LibList" type="TDumpLibList" />
+	<entry name="MapList" type="TDumpMapList" />
+	<entry name="Wrapper" type="TDumpWrapper" />
+	<entry name="Filter" type="TLOGFilterVec" />
+	<entry name="StartTime" type="time" />
+	<entry name="LastSec" type="int" />
+	<entry name="OnceLimit" type="int" />
+	<entry name="TotalLimit" type="int" />
+</struct>
+
+</metalib>
+

@@ -1,0 +1,1 @@
+tgetopt.o: tgetopt.c

@@ -1,0 +1,823 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: expat_static - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1328.tmp" with contents
+[
+/nologo /MD /W3 /GX /O2 /D "WIN32" /D "_WINDOWS" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "COMPILED_FROM_DSP" /D "XML_STATIC" /Fo"..\..\..\..\tsf4g_output\deps\expat\Release_static/" /Fd"..\..\..\..\tsf4g_output\deps\expat\Release_static/" /FD /c 
+"Z:\tsf4g\deps\expat\lib\xmlparse.c"
+"Z:\tsf4g\deps\expat\lib\xmlrole.c"
+"Z:\tsf4g\deps\expat\lib\xmltok.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1328.tmp" 
+Creating command line "link.exe -lib /nologo /out:".\..\..\..\win32_lib\vc6\release\libexpat.lib"  \tsf4g_output\deps\expat\Release_static\xmlparse.obj \tsf4g_output\deps\expat\Release_static\xmlrole.obj \tsf4g_output\deps\expat\Release_static\xmltok.obj "
+<h3>Output Window</h3>
+Compiling...
+xmlparse.c
+xmlrole.c
+xmltok.c
+Generating Code...
+Creating library...
+
+
+
+<h3>Results</h3>
+libexpat.lib - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: expat_static - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1329.tmp" with contents
+[
+/nologo /MDd /W3 /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "COMPILED_FROM_DSP" /D "_MBCS" /D "_LIB" /D "XML_STATIC" /FR"..\..\..\..\tsf4g_output\deps\expat\Debug_static/" /Fo"..\..\..\..\tsf4g_output\deps\expat\Debug_static/" /Fd"..\..\..\..\tsf4g_output\deps\expat\Debug_static/" /FD /GZ /c 
+"Z:\tsf4g\deps\expat\lib\xmlparse.c"
+"Z:\tsf4g\deps\expat\lib\xmlrole.c"
+"Z:\tsf4g\deps\expat\lib\xmltok.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1329.tmp" 
+Creating command line "link.exe -lib /nologo /out:".\..\..\..\win32_lib\vc6\debug\libexpat_d.lib"  \tsf4g_output\deps\expat\Debug_static\xmlparse.obj \tsf4g_output\deps\expat\Debug_static\xmlrole.obj \tsf4g_output\deps\expat\Debug_static\xmltok.obj "
+<h3>Output Window</h3>
+Compiling...
+xmlparse.c
+xmlrole.c
+xmltok.c
+Generating Code...
+Creating library...
+
+
+
+<h3>Results</h3>
+libexpat_d.lib - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: libpal - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132A.tmp" with contents
+[
+/nologo /MD /W3 /GX /O2 /I "../../../../../include" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /Fp"..\..\..\..\..\tsf4g_output\libraries\pal\Release/libpal.pch" /YX /Fo"..\..\..\..\..\tsf4g_output\libraries\pal\Release/" /Fd"..\..\..\..\..\tsf4g_output\libraries\pal\Release/" /FD /c 
+"Z:\tsf4g\lib_src\pal\dirent.c"
+"Z:\tsf4g\lib_src\pal\fcntl.c"
+"Z:\tsf4g\lib_src\pal\getopt.c"
+"Z:\tsf4g\lib_src\pal\pthread.c"
+"Z:\tsf4g\lib_src\pal\pthread_attr.c"
+"Z:\tsf4g\lib_src\pal\pthread_barrier.c"
+"Z:\tsf4g\lib_src\pal\pthread_barrierattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_cond.c"
+"Z:\tsf4g\lib_src\pal\pthread_condattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_mutexattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_rwlock.c"
+"Z:\tsf4g\lib_src\pal\pthread_rwlockattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_spin.c"
+"Z:\tsf4g\lib_src\pal\semaphore.c"
+"Z:\tsf4g\lib_src\pal\shortcut.cpp"
+"Z:\tsf4g\lib_src\pal\strptime.c"
+"Z:\tsf4g\lib_src\pal\strtoll.c"
+"Z:\tsf4g\lib_src\pal\strtoull.c"
+"Z:\tsf4g\lib_src\pal\tdir.c"
+"Z:\tsf4g\lib_src\pal\terrno.c"
+"Z:\tsf4g\lib_src\pal\texec.c"
+"Z:\tsf4g\lib_src\pal\tfile.c"
+"Z:\tsf4g\lib_src\pal\tfork.c"
+"Z:\tsf4g\lib_src\pal\tipc.c"
+"Z:\tsf4g\lib_src\pal\tlock.c"
+"Z:\tsf4g\lib_src\pal\tmmap.c"
+"Z:\tsf4g\lib_src\pal\tmsgque.c"
+"Z:\tsf4g\lib_src\pal\tnet.c"
+"Z:\tsf4g\lib_src\pal\tos.c"
+"Z:\tsf4g\lib_src\pal\tpoll.c"
+"Z:\tsf4g\lib_src\pal\tresource.c"
+"Z:\tsf4g\lib_src\pal\tsched.c"
+"Z:\tsf4g\lib_src\pal\tsem.c"
+"Z:\tsf4g\lib_src\pal\tshm.c"
+"Z:\tsf4g\lib_src\pal\tsignal.c"
+"Z:\tsf4g\lib_src\pal\tsocket.c"
+"Z:\tsf4g\lib_src\pal\tstdio.c"
+"Z:\tsf4g\lib_src\pal\tstdlib.c"
+"Z:\tsf4g\lib_src\pal\tthread.c"
+"Z:\tsf4g\lib_src\pal\ttime.c"
+"Z:\tsf4g\lib_src\pal\tuio.c"
+"Z:\tsf4g\lib_src\pal\twait.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132A.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132B.tmp" with contents
+[
+/nologo /out:"../../../../../win32_lib/vc6/release\libpal.lib" 
+\tsf4g\tsf4g_output\libraries\pal\Release\dirent.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\fcntl.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\getopt.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_attr.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_barrier.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_barrierattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_cond.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_condattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_mutexattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_rwlock.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_rwlockattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\pthread_spin.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\semaphore.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\shortcut.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\strptime.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\strtoll.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\strtoull.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tdir.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\terrno.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\texec.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tfile.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tfork.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tipc.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tlock.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tmmap.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tmsgque.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tnet.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tos.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tpoll.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tresource.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tsched.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tsem.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tshm.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tsignal.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tsocket.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tstdio.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tstdlib.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tthread.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\ttime.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\tuio.obj
+\tsf4g\tsf4g_output\libraries\pal\Release\twait.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132B.tmp"
+<h3>Output Window</h3>
+Compiling...
+dirent.c
+fcntl.c
+getopt.c
+pthread.c
+pthread_attr.c
+pthread_barrier.c
+pthread_barrierattr.c
+pthread_cond.c
+pthread_condattr.c
+pthread_mutexattr.c
+pthread_rwlock.c
+pthread_rwlockattr.c
+pthread_spin.c
+semaphore.c
+shortcut.cpp
+strptime.c
+strtoll.c
+strtoull.c
+tdir.c
+terrno.c
+texec.c
+tfile.c
+tfork.c
+tipc.c
+tlock.c
+tmmap.c
+tmsgque.c
+tnet.c
+tos.c
+Z:\tsf4g\lib_src\pal\tos.c(1465) : warning C4013: '_mkdir' undefined; assuming extern returning int
+tpoll.c
+tresource.c
+tsched.c
+tsem.c
+tshm.c
+tsignal.c
+tsocket.c
+tstdio.c
+tstdlib.c
+tthread.c
+ttime.c
+tuio.c
+twait.c
+Creating library...
+
+
+
+<h3>Results</h3>
+libpal.lib - 0 error(s), 1 warning(s)
+<h3>
+--------------------Configuration: libpal - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132C.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "../../../../../include" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Fp"..\..\..\..\..\tsf4g_output\libraries\pal\Debug/libpal.pch" /YX /Fo"..\..\..\..\..\tsf4g_output\libraries\pal\Debug/" /Fd"..\..\..\..\..\tsf4g_output\libraries\pal\Debug/" /FD /GZ /c 
+"Z:\tsf4g\lib_src\pal\dirent.c"
+"Z:\tsf4g\lib_src\pal\fcntl.c"
+"Z:\tsf4g\lib_src\pal\getopt.c"
+"Z:\tsf4g\lib_src\pal\pthread.c"
+"Z:\tsf4g\lib_src\pal\pthread_attr.c"
+"Z:\tsf4g\lib_src\pal\pthread_barrier.c"
+"Z:\tsf4g\lib_src\pal\pthread_barrierattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_cond.c"
+"Z:\tsf4g\lib_src\pal\pthread_condattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_mutexattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_rwlock.c"
+"Z:\tsf4g\lib_src\pal\pthread_rwlockattr.c"
+"Z:\tsf4g\lib_src\pal\pthread_spin.c"
+"Z:\tsf4g\lib_src\pal\semaphore.c"
+"Z:\tsf4g\lib_src\pal\shortcut.cpp"
+"Z:\tsf4g\lib_src\pal\strptime.c"
+"Z:\tsf4g\lib_src\pal\strtoll.c"
+"Z:\tsf4g\lib_src\pal\strtoull.c"
+"Z:\tsf4g\lib_src\pal\tdir.c"
+"Z:\tsf4g\lib_src\pal\terrno.c"
+"Z:\tsf4g\lib_src\pal\texec.c"
+"Z:\tsf4g\lib_src\pal\tfile.c"
+"Z:\tsf4g\lib_src\pal\tfork.c"
+"Z:\tsf4g\lib_src\pal\tipc.c"
+"Z:\tsf4g\lib_src\pal\tlock.c"
+"Z:\tsf4g\lib_src\pal\tmmap.c"
+"Z:\tsf4g\lib_src\pal\tmsgque.c"
+"Z:\tsf4g\lib_src\pal\tnet.c"
+"Z:\tsf4g\lib_src\pal\tos.c"
+"Z:\tsf4g\lib_src\pal\tpoll.c"
+"Z:\tsf4g\lib_src\pal\tresource.c"
+"Z:\tsf4g\lib_src\pal\tsched.c"
+"Z:\tsf4g\lib_src\pal\tsem.c"
+"Z:\tsf4g\lib_src\pal\tshm.c"
+"Z:\tsf4g\lib_src\pal\tsignal.c"
+"Z:\tsf4g\lib_src\pal\tsocket.c"
+"Z:\tsf4g\lib_src\pal\tstdio.c"
+"Z:\tsf4g\lib_src\pal\tstdlib.c"
+"Z:\tsf4g\lib_src\pal\tthread.c"
+"Z:\tsf4g\lib_src\pal\ttime.c"
+"Z:\tsf4g\lib_src\pal\tuio.c"
+"Z:\tsf4g\lib_src\pal\twait.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132C.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132D.tmp" with contents
+[
+/nologo /out:"../../../../../win32_lib/vc6/debug\libpal_d.lib" 
+\tsf4g\tsf4g_output\libraries\pal\Debug\dirent.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\fcntl.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\getopt.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_attr.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_barrier.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_barrierattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_cond.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_condattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_mutexattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_rwlock.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_rwlockattr.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\pthread_spin.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\semaphore.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\shortcut.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\strptime.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\strtoll.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\strtoull.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tdir.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\terrno.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\texec.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tfile.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tfork.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tipc.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tlock.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tmmap.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tmsgque.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tnet.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tos.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tpoll.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tresource.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tsched.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tsem.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tshm.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tsignal.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tsocket.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tstdio.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tstdlib.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tthread.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\ttime.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\tuio.obj
+\tsf4g\tsf4g_output\libraries\pal\Debug\twait.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP132D.tmp"
+<h3>Output Window</h3>
+Compiling...
+dirent.c
+fcntl.c
+getopt.c
+pthread.c
+pthread_attr.c
+pthread_barrier.c
+pthread_barrierattr.c
+pthread_cond.c
+pthread_condattr.c
+pthread_mutexattr.c
+pthread_rwlock.c
+pthread_rwlockattr.c
+pthread_spin.c
+semaphore.c
+shortcut.cpp
+strptime.c
+strtoll.c
+strtoull.c
+tdir.c
+terrno.c
+texec.c
+tfile.c
+tfork.c
+tipc.c
+tlock.c
+tmmap.c
+tmsgque.c
+tnet.c
+tos.c
+z:\tsf4g\lib_src\pal\tos.c(1465) : warning C4013: '_mkdir' undefined; assuming extern returning int
+tpoll.c
+tresource.c
+tsched.c
+tsem.c
+tshm.c
+tsignal.c
+tsocket.c
+tstdio.c
+tstdlib.c
+tthread.c
+ttime.c
+tuio.c
+twait.c
+Creating library...
+
+
+
+<h3>Results</h3>
+libpal_d.lib - 0 error(s), 1 warning(s)
+<h3>
+--------------------Configuration: libtdr - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1337.tmp" with contents
+[
+/nologo /MD /W3 /GX /O2 /I "../../../../../include" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "TSF4G_STATIC" /Fp"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr\Release/libtdr.pch" /YX /Fo"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr\Release/" /Fd"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr\Release/" /FD /c 
+"Z:\tsf4g\lib_src\tdr\tdr_auxtools.c"
+"Z:\tsf4g\lib_src\tdr\tdr_ctypes_info.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_io.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_sort.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_iostream_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_md5.c"
+"Z:\tsf4g\lib_src\tdr\tdr_meta_entries_index.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_init.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_net.c"
+"Z:\tsf4g\lib_src\tdr\tdr_operate_data.c"
+"Z:\tsf4g\lib_src\tdr\tdr_os.c"
+"Z:\tsf4g\lib_src\tdr\tdr_strptime.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1337.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1338.tmp" with contents
+[
+/nologo /out:"../../../../../win32_lib/vc6/release\libtdr.lib" 
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_auxtools.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_ctypes_info.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_data_io.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_data_sort.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_error.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_error_i.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_iostream_i.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_md5.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_meta_entries_index.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_metalib_init.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_metalib_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_net.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_operate_data.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_os.obj
+\tsf4g_output\libraries\tdr\libtdr\Release\tdr_strptime.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1338.tmp"
+<h3>Output Window</h3>
+Compiling...
+tdr_auxtools.c
+tdr_ctypes_info.c
+tdr_data_io.c
+tdr_data_sort.c
+tdr_error.c
+tdr_error_i.c
+tdr_iostream_i.c
+tdr_md5.c
+tdr_meta_entries_index.c
+tdr_metalib_init.c
+tdr_metalib_manage_i.c
+tdr_net.c
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+tdr_operate_data.c
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+tdr_os.c
+tdr_strptime.c
+Creating library...
+
+
+
+<h3>Results</h3>
+libtdr.lib - 0 error(s), 8 warning(s)
+<h3>
+--------------------Configuration: libtdr - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1369.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "../../../../../include" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "TSF4G_STATIC" /Fp"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr\Debug/libtdr.pch" /YX /Fo"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr\Debug/" /Fd"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr\Debug/" /FD /GZ /c 
+"Z:\tsf4g\lib_src\tdr\tdr_auxtools.c"
+"Z:\tsf4g\lib_src\tdr\tdr_ctypes_info.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_io.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_sort.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_iostream_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_md5.c"
+"Z:\tsf4g\lib_src\tdr\tdr_meta_entries_index.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_init.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_net.c"
+"Z:\tsf4g\lib_src\tdr\tdr_operate_data.c"
+"Z:\tsf4g\lib_src\tdr\tdr_os.c"
+"Z:\tsf4g\lib_src\tdr\tdr_strptime.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1369.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP136A.tmp" with contents
+[
+/nologo /out:".\../../../../../win32_lib/vc6/debug\libtdr_d.lib" 
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_auxtools.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_ctypes_info.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_data_io.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_data_sort.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_error.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_error_i.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_iostream_i.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_md5.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_meta_entries_index.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_metalib_init.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_metalib_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_net.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_operate_data.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_os.obj
+\tsf4g_output\libraries\tdr\libtdr\Debug\tdr_strptime.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP136A.tmp"
+<h3>Output Window</h3>
+Compiling...
+tdr_auxtools.c
+tdr_ctypes_info.c
+tdr_data_io.c
+tdr_data_sort.c
+tdr_error.c
+tdr_error_i.c
+tdr_iostream_i.c
+tdr_md5.c
+tdr_meta_entries_index.c
+tdr_metalib_init.c
+tdr_metalib_manage_i.c
+tdr_net.c
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+tdr_operate_data.c
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+tdr_os.c
+tdr_strptime.c
+Creating library...
+
+
+
+<h3>Results</h3>
+libtdr_d.lib - 0 error(s), 8 warning(s)
+<h3>
+--------------------Configuration: libtdr_xml - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP158B.tmp" with contents
+[
+/nologo /MD /W3 /GX /O2 /I "../../../../../deps/scew" /I "../../../../../deps/expat/lib" /I "../../../../../include" /I "../../../../../lib_src/" /D "NDEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "XML_STATIC" /D "TSF4G_STATIC" /Fp"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr_xml\Release/libtdr_xml.pch" /YX /Fo"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr_xml\Release/" /Fd"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr_xml\Release/" /FD /c 
+"Z:\tsf4g\lib_src\tdr\tdr_auxtools.c"
+"Z:\tsf4g\lib_src\tdr\tdr_ctypes_info.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_io.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_sort.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_iostream_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_md5.c"
+"Z:\tsf4g\lib_src\tdr\tdr_meta_entries_index.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_init.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_net.c"
+"Z:\tsf4g\lib_src\tdr\tdr_operate_data.c"
+"Z:\tsf4g\lib_src\tdr\tdr_os.c"
+"Z:\tsf4g\lib_src\tdr\tdr_strptime.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_data_inoutput.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metaleb_param_i.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metalib_entry_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metalib_meta_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metalib_to_hpp.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_scew_if.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_XMLMetaLib.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP158B.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP158C.tmp" with contents
+[
+/nologo /out:".\../../../../../win32_lib/vc6/release\libtdr_xml.lib" 
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_auxtools.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_ctypes_info.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_data_io.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_data_sort.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_error.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_error_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_iostream_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_md5.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_meta_entries_index.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_metalib_init.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_metalib_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_net.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_operate_data.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_os.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_strptime.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_data_inoutput.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_metaleb_param_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_metalib_entry_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_metalib_meta_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_metalib_to_hpp.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_scew_if.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Release\tdr_XMLMetaLib.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP158C.tmp"
+<h3>Output Window</h3>
+Compiling...
+tdr_auxtools.c
+tdr_ctypes_info.c
+tdr_data_io.c
+tdr_data_sort.c
+tdr_error.c
+tdr_error_i.c
+tdr_iostream_i.c
+tdr_md5.c
+tdr_meta_entries_index.c
+tdr_metalib_init.c
+tdr_metalib_manage_i.c
+tdr_net.c
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+tdr_operate_data.c
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+Z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+Z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+tdr_os.c
+tdr_strptime.c
+tdr_data_inoutput.c
+tdr_metaleb_param_i.c
+tdr_metalib_entry_manage_i.c
+tdr_metalib_meta_manage_i.c
+tdr_metalib_to_hpp.c
+tdr_scew_if.c
+tdr_XMLMetaLib.c
+Creating library...
+
+
+
+<h3>Results</h3>
+libtdr_xml.lib - 0 error(s), 8 warning(s)
+<h3>
+--------------------Configuration: libtdr_xml - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1778.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "../../../../../deps/scew" /I "../../../../../deps/expat/lib" /I "../../../../../include" /I "../../../../../lib_src/" /D "_DEBUG" /D "WIN32" /D "_MBCS" /D "_LIB" /D "TSF4G_STATIC" /FR"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr_xml\Debug/" /Fp"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr_xml\Debug/libtdr_xml.pch" /YX /Fo"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr_xml\Debug/" /Fd"..\..\..\..\..\..\tsf4g_output\libraries\tdr\libtdr_xml\Debug/" /FD /GZ /c 
+"Z:\tsf4g\lib_src\tdr\tdr_auxtools.c"
+"Z:\tsf4g\lib_src\tdr\tdr_ctypes_info.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_io.c"
+"Z:\tsf4g\lib_src\tdr\tdr_data_sort.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error.c"
+"Z:\tsf4g\lib_src\tdr\tdr_error_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_iostream_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_md5.c"
+"Z:\tsf4g\lib_src\tdr\tdr_meta_entries_index.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_init.c"
+"Z:\tsf4g\lib_src\tdr\tdr_metalib_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\tdr_net.c"
+"Z:\tsf4g\lib_src\tdr\tdr_operate_data.c"
+"Z:\tsf4g\lib_src\tdr\tdr_os.c"
+"Z:\tsf4g\lib_src\tdr\tdr_strptime.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_data_inoutput.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metaleb_param_i.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metalib_entry_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metalib_meta_manage_i.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_metalib_to_hpp.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_scew_if.c"
+"Z:\tsf4g\lib_src\tdr\xml_metalib\tdr_XMLMetaLib.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1778.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1779.tmp" with contents
+[
+/nologo /out:".\../../../../../win32_lib/vc6/debug\libtdr_xml_d.lib" 
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_auxtools.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_ctypes_info.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_data_io.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_data_sort.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_error.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_error_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_iostream_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_md5.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_meta_entries_index.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_metalib_init.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_metalib_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_net.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_operate_data.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_os.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_strptime.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_data_inoutput.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_metaleb_param_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_metalib_entry_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_metalib_meta_manage_i.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_metalib_to_hpp.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_scew_if.obj
+\tsf4g_output\libraries\tdr\libtdr_xml\Debug\tdr_XMLMetaLib.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1779.tmp"
+<h3>Output Window</h3>
+Compiling...
+tdr_auxtools.c
+tdr_ctypes_info.c
+tdr_data_io.c
+tdr_data_sort.c
+tdr_error.c
+tdr_error_i.c
+tdr_iostream_i.c
+tdr_md5.c
+tdr_meta_entries_index.c
+tdr_metalib_init.c
+tdr_metalib_manage_i.c
+tdr_net.c
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4244: 'function' : conversion from '__int64 ' to 'unsigned int ', possible loss of data
+tdr_operate_data.c
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+z:\tsf4g\lib_src\tdr\tdr_net.c(535) : warning C4761: integral size mismatch in argument; conversion supplied
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+z:\tsf4g\lib_src\tdr\tdr_net.c(714) : warning C4761: integral size mismatch in argument; conversion supplied
+tdr_os.c
+tdr_strptime.c
+tdr_data_inoutput.c
+tdr_metaleb_param_i.c
+tdr_metalib_entry_manage_i.c
+tdr_metalib_meta_manage_i.c
+tdr_metalib_to_hpp.c
+tdr_scew_if.c
+tdr_XMLMetaLib.c
+Creating library...
+
+
+
+<h3>Results</h3>
+libtdr_xml_d.lib - 0 error(s), 8 warning(s)
+<h3>
+--------------------Configuration: scew - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1962.tmp" with contents
+[
+/nologo /MD /W4 /GX /O2 /I "..\..\expat\lib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "XML_STATIC" /Fo"..\..\..\..\tsf4g_output\deps\scew\Release/" /Fd"..\..\..\..\tsf4g_output\deps\scew\Release/" /FD /c 
+"Z:\tsf4g\deps\scew\scew\attribute.c"
+"Z:\tsf4g\deps\scew\scew\element.c"
+"Z:\tsf4g\deps\scew\scew\error.c"
+"Z:\tsf4g\deps\scew\scew\parser.c"
+"Z:\tsf4g\deps\scew\scew\str.c"
+"Z:\tsf4g\deps\scew\scew\tree.c"
+"Z:\tsf4g\deps\scew\scew\writer.c"
+"Z:\tsf4g\deps\scew\scew\xattribute.c"
+"Z:\tsf4g\deps\scew\scew\xerror.c"
+"Z:\tsf4g\deps\scew\scew\xhandler.c"
+"Z:\tsf4g\deps\scew\scew\xparser.c"
+"Z:\tsf4g\deps\scew\scew\xprint.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1962.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1963.tmp" with contents
+[
+/nologo /out:".\..\..\..\win32_lib\vc6\release\scew_s.lib" 
+\tsf4g_output\deps\scew\Release\attribute.obj
+\tsf4g_output\deps\scew\Release\element.obj
+\tsf4g_output\deps\scew\Release\error.obj
+\tsf4g_output\deps\scew\Release\parser.obj
+\tsf4g_output\deps\scew\Release\str.obj
+\tsf4g_output\deps\scew\Release\tree.obj
+\tsf4g_output\deps\scew\Release\writer.obj
+\tsf4g_output\deps\scew\Release\xattribute.obj
+\tsf4g_output\deps\scew\Release\xerror.obj
+\tsf4g_output\deps\scew\Release\xhandler.obj
+\tsf4g_output\deps\scew\Release\xparser.obj
+\tsf4g_output\deps\scew\Release\xprint.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1963.tmp"
+<h3>Output Window</h3>
+Compiling...
+attribute.c
+element.c
+error.c
+parser.c
+Z:\tsf4g\deps\scew\scew\parser.c(175) : warning C4018: '<' : signed/unsigned mismatch
+Z:\tsf4g\deps\scew\scew\parser.c(175) : warning C4018: '<=' : signed/unsigned mismatch
+Z:\tsf4g\deps\scew\scew\parser.c(177) : warning C4018: '==' : signed/unsigned mismatch
+Z:\tsf4g\deps\scew\scew\parser.c(180) : warning C4018: '<' : signed/unsigned mismatch
+str.c
+tree.c
+writer.c
+xattribute.c
+xerror.c
+xhandler.c
+xparser.c
+xprint.c
+Generating Code...
+Creating library...
+
+
+
+<h3>Results</h3>
+scew_s.lib - 0 error(s), 4 warning(s)
+<h3>
+--------------------Configuration: scew - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP19B2.tmp" with contents
+[
+/nologo /MDd /W4 /Gm /GX /ZI /Od /I "..\..\expat\lib" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "XML_STATIC" /Fo"..\..\..\..\tsf4g_output\deps\scew\Debug/" /Fd"..\..\..\..\tsf4g_output\deps\scew\Debug/" /FD /GZ /c 
+"Z:\tsf4g\deps\scew\scew\attribute.c"
+"Z:\tsf4g\deps\scew\scew\element.c"
+"Z:\tsf4g\deps\scew\scew\error.c"
+"Z:\tsf4g\deps\scew\scew\parser.c"
+"Z:\tsf4g\deps\scew\scew\str.c"
+"Z:\tsf4g\deps\scew\scew\tree.c"
+"Z:\tsf4g\deps\scew\scew\writer.c"
+"Z:\tsf4g\deps\scew\scew\xattribute.c"
+"Z:\tsf4g\deps\scew\scew\xerror.c"
+"Z:\tsf4g\deps\scew\scew\xhandler.c"
+"Z:\tsf4g\deps\scew\scew\xparser.c"
+"Z:\tsf4g\deps\scew\scew\xprint.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP19B2.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP19B3.tmp" with contents
+[
+/nologo /out:".\..\..\..\win32_lib\vc6\debug\scew_sd.lib" 
+\tsf4g_output\deps\scew\Debug\attribute.obj
+\tsf4g_output\deps\scew\Debug\element.obj
+\tsf4g_output\deps\scew\Debug\error.obj
+\tsf4g_output\deps\scew\Debug\parser.obj
+\tsf4g_output\deps\scew\Debug\str.obj
+\tsf4g_output\deps\scew\Debug\tree.obj
+\tsf4g_output\deps\scew\Debug\writer.obj
+\tsf4g_output\deps\scew\Debug\xattribute.obj
+\tsf4g_output\deps\scew\Debug\xerror.obj
+\tsf4g_output\deps\scew\Debug\xhandler.obj
+\tsf4g_output\deps\scew\Debug\xparser.obj
+\tsf4g_output\deps\scew\Debug\xprint.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP19B3.tmp"
+<h3>Output Window</h3>
+Compiling...
+attribute.c
+element.c
+error.c
+parser.c
+z:\tsf4g\deps\scew\scew\parser.c(175) : warning C4018: '<' : signed/unsigned mismatch
+z:\tsf4g\deps\scew\scew\parser.c(175) : warning C4018: '<=' : signed/unsigned mismatch
+z:\tsf4g\deps\scew\scew\parser.c(177) : warning C4018: '==' : signed/unsigned mismatch
+z:\tsf4g\deps\scew\scew\parser.c(180) : warning C4018: '<' : signed/unsigned mismatch
+str.c
+tree.c
+writer.c
+xattribute.c
+xerror.c
+xhandler.c
+xparser.c
+xprint.c
+Generating Code...
+Creating library...
+
+
+
+<h3>Results</h3>
+scew_sd.lib - 0 error(s), 4 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<tconnd version="11">
+    <Threading>0 </Threading>
+    <EnableViewer>0 </EnableViewer>
+    <MaxFD>10240 </MaxFD>
+    
+    <TDRList type="TDRList">
+        <Count>1 </Count>
+        <TDRs type="TDR">
+            <Name>default </Name>
+            <Path> ./protocol/protocol.tdr</Path>
+        </TDRs>
+    </TDRList>
+    
+    <PDUList type="PDUList">
+        <Count>1 </Count>
+        <PDUs type="PDU">
+            <Name>default </Name>
+            <UpSize> 0 </UpSize>
+            <LenParsertype>PDULENPARSERID_BY_QQ </LenParsertype>
+            <LenParser type="PDULenParser">
+                <QQParser type="PDULenQQParser">
+                    <TDR>default </TDR>
+                    <SendPkg>CSPKG</SendPkg>
+                    <RecvPkg>CSPKG</RecvPkg>
+                    <CheckCltIP> 0 </CheckCltIP>
+                    <SigValidSec>1800</SigValidSec>
+                    <EncMethod>2</EncMethod>
+                    <AuthType>3</AuthType>
+                    <SvrSKeyLen>16</SvrSKeyLen>
+                  <!--  <SvrSKey>aaaabbbbccccdddd</SvrSKey>-->
+                  <SvrSKey>}qt#75}Ap~*n*+.a</SvrSKey>
+				  <TestNumEnable>1</TestNumEnable>
+				 <TestSvrSKeyLen>16</TestSvrSKeyLen>
+				<TestSvrSKey>aaaaaaaaaaaaaaaa</TestSvrSKey>>
+				<TestBeginNum>10000</TestBeginNum>
+				<TestEndNum>99999</TestEndNum>
+																																		   
+                </QQParser>
+            </LenParser>
+        </PDUs>
+    </PDUList>
+    
+    <ListenerList type="ListenerList">
+        <Count>1 </Count>
+        <Listeners type="Listener">
+            <Name>default </Name>
+            <Url>tcp://172.25.40.97:9061?reuse=1 </Url>
+            <SendBuff>204800</SendBuff>
+            <RecvBuff>204800</RecvBuff>
+        </Listeners>
+    </ListenerList>
+    
+    <SerializerList type="SerializerList">
+        <Count>1 </Count>
+        <Serializers type="Serializer">
+            <Name>default </Name>
+            <Url>6.1.1.2 </Url>
+        </Serializers>
+    </SerializerList>
+    
+     <NetTransList type="NetTransList">
+        <Count>1 </Count>
+        <NetTrans type="NetTrans">
+            <Name>default </Name>
+            <UseTimeStamp>0 </UseTimeStamp>
+            <UseWaitQueue>0 </UseWaitQueue>
+            <QueueNotifyInterval>1 </QueueNotifyInterval>
+            <PDU>default </PDU>
+            <Listener>default </Listener>
+            <Serializer>default </Serializer>
+            <ConnLimit type="ConnLimit">
+                <Permit>0 </Permit>
+                <Speed>0</Speed>
+            </ConnLimit>
+        </NetTrans>
+    </NetTransList>
+</tconnd>

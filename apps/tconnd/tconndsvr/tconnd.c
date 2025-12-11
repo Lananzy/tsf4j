@@ -1,0 +1,4622 @@
+ /*
+**  @file $RCSfile: tconnd.c,v $
+**  general description of this module
+**  $Id: tconnd.c,v 1.26 2009/04/14 03:17:40 hardway Exp $
+**  @author $Author: hardway $
+**  @date $Date: 2009/04/14 03:17:40 $
+**  @version $Revision: 1.26 $
+**  @note Editor: Vim 6.1, Gcc 4.0.1, tab=4
+**  @note Platform: Linux
+*/
+
+#include "pal/pal.h"
+#include "tdr/tdr.h"
+
+#include "tbus/tbus.h"
+#include "tbus/tbus_macros.h"
+#include "tdr/tdr_metalib_kernel_i.h"
+
+#include "tlog/tlog.h"
+#include "tapp/tapp.h"
+
+#include "mng/tmetabase.h"
+#include "mng/tmib.h"
+#include "mng/tmng_def.h"
+
+#include "tconnddef.h"
+#include "apps/tconnapi/tframehead.h"
+#include "apps/tconnapi/tconnapi.h"
+#include "tsec/oi_tea.h"
+#include "tsec/tsecbasedef.h"
+#include "apps/tcltapi/tqqdef.h"
+#include "apps/tcltapi/tpdudef.h"
+#include "apps/tcltapi/tcltapi.h"
+#include "apps/tcltapi/tqqapi.h"
+#include "tconnpool.h"
+#include "tconnmgr.h"
+#include "tconnkey.h"
+#include "tconnd_version.h"
+
+extern unsigned char g_szMetalib_tconnd[];
+
+#define MAX_EVENTS		                8192
+#define Time_Slice_Count                10
+#define Package_Per_Slice              100
+#define TCONND_WAIT_TIME            5
+
+static TAPPCTX gs_stAppCtx;
+
+static time_t gs_tNow	=	0;
+
+/*
+#define tbus_connect(x,y) 0
+#define tbus_send( x, y, z, u, v, w) 0
+#define tbus_sendv( x, y, z, u, v, w) 0
+#define tbus_set_pkg_route( x, y, z) 0
+#define tbus_forward( x, y, z, u, v, w) 0
+#define tbus_forwardv( x, y, z, u, v, w) 0
+#define tbus_recv(x, y, z, u, v, w) -1
+*/
+
+struct tagTConnEnv
+{
+	CONFINST stConfInst;
+	TCONNTHREAD astThreads[TCONND_MAX_NETTRANS];
+	
+	TAPPDATA		stSecXML;
+	LPSVRSKEYINST	pstSvrsKeyInst;
+};
+
+typedef struct tagTConnEnv		TCONNENV;
+typedef struct tagTConnEnv		*LPTCONNENV;
+
+static TCONNENV gs_stEnv;
+static char gs_szCharList[]	=	"ABCDEFGHIJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+
+static char HEX_value[16]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+
+extern int tconnd_change_sessionkey(TCONNTHREAD* pstThread, TCONNINST* pstInst);
+extern int tconnd_reserve_connection(TCONNTHREAD* pstThread);
+extern int tconnd_notify_lisinst_close(TCONNTHREAD* pstThread, TCONNINST* pstInst,int iReason);
+extern int tconnd_notify_lisinst_syn(TCONNTHREAD* pstThread, TCONNINST* pstInst);
+extern int tconnd_do_synack(TPDUHEAD* pstHead, TCONNTHREAD* pstThread,TCONNINST* pstInst);
+extern int tconnd_adjust_recvtime(TCONNTHREAD* pstThread);
+extern int tconnd_proc_idle(TAPPCTX* pstAppCtx, TCONNENV* pstEnv);
+
+
+
+
+//debug use
+char* Bin2Hex(unsigned char * bin,int binlen, char* hex,int *hexlen)
+{
+	unsigned char  low,hi;
+	register char *pHex=hex;
+	register unsigned char* pBin=bin;
+	int j=0,i=0;
+	if (*hexlen < (binlen * 2+1))
+	{
+		return NULL;
+	}
+	while (i <= binlen )
+	{
+        low = pBin[i] & 0X0F;
+        hi = pBin[i]>>4;
+		pHex[j++] = HEX_value[hi];
+		pHex[j++] = HEX_value[low];
+		i++;
+	}
+	*hexlen = binlen * 2;
+	hex[*hexlen]=0;
+    return pHex;
+}
+
+
+char * tconnd_randstr(char* pszBuff, int iLen)
+{
+	char *pszChars=gs_szCharList;
+
+	int	i, iChars;
+
+	iChars	=	sizeof(gs_szCharList) - 1;
+
+	for( i=0; i<iLen; i++ )
+	{	
+		pszBuff[i]	=	pszChars[ (int)( (float)iChars*rand()/(RAND_MAX+1.0) ) ];
+	}
+
+	return pszBuff;
+}
+
+static void tconnd_safe_cpy_svrskey(LPSVRSKEYDATA pstDst, LPSVRSKEYDATA pstSrc)
+{
+	strncpy(pstDst->szPDUName, pstSrc->szPDUName, TCONND_NAME_LEN);
+	pstDst->iSvrSKeyLen		=	pstSrc->iSvrSKeyLen;
+	pstDst->iSvrSKey2Len		=	pstSrc->iSvrSKey2Len;
+	
+	if (pstDst->iSvrSKeyLen < 0 || pstDst->iSvrSKeyLen > TCONND_SVRSKEY_LEN)
+	{
+		pstDst->iSvrSKeyLen	= 	0;
+	}
+
+	if (pstDst->iSvrSKey2Len < 0 || pstDst->iSvrSKey2Len > TCONND_SVRSKEY_LEN)
+	{
+		pstDst->iSvrSKey2Len	= 	0;
+	}
+	
+	memcpy(pstDst->szSvrSKey, 	pstSrc->szSvrSKey, 	pstDst->iSvrSKeyLen);
+	memcpy(pstDst->szSvrSKey2, 	pstSrc->szSvrSKey2, 	pstDst->iSvrSKey2Len);
+	
+	pstDst->szSvrSKey[pstDst->iSvrSKeyLen]	= 0;
+	pstDst->szSvrSKey2[pstDst->iSvrSKey2Len]	= 0;
+}
+
+static int tconnd_set_pdu_to_agent(TCONNENV *pstEnv, SVRSKEYDATA astKeyData[], int iPDUInst)
+{
+	int 		i, j;
+	int		iFound;
+	LPSVRSKEYINST		pstInst;
+	
+	pstInst	=	pstEnv->pstSvrsKeyInst;
+	for (i = 0; i < iPDUInst; i++)
+	{
+		iFound = 0;
+		for (j = 0; j < pstInst->stHead.iPDU; j++)
+		{
+			if (strcmp(astKeyData[i].szPDUName, pstInst->stBody.astSvrsKey[j].szPDUName) == 0)
+			{
+				iFound = 1;
+				break;
+			}
+		}
+		
+		if (!iFound)
+		{
+			/* pdu 自增 */
+			if (pstInst->stHead.iPDU < TCONND_MAX_PDU)
+			{
+				/* a new pdu */
+				strncpy(pstInst->stBody.astSvrsKey[pstInst->stHead.iPDU].szPDUName, astKeyData[i].szPDUName, TCONND_NAME_LEN);
+				pstInst->stHead.iPDU ++;
+			}
+			else
+			{
+				printf ("PDU's Number >= Max(%d)\n", TCONND_MAX_PDU);
+				return -1;
+			}
+		}
+	}
+	
+	return 0;
+}
+
+static int tconnd_get_svrskey_from_agent(TCONNENV *pstEnv, SVRSKEYDATA astKeyData[])
+{
+	int 	i;
+	LPSVRSKEYINST		pstInst;
+	
+	pstInst	=	pstEnv->pstSvrsKeyInst;
+	for (i = 0; i < pstInst->stHead.iPDU; i++)
+	{
+		tconnd_safe_cpy_svrskey(&astKeyData[i], &pstInst->stBody.astSvrsKey[i]);
+	}
+	
+	return 0;
+}
+
+static int tconnd_get_svrskey_from_file(TCONNENV *pstEnv, SVRSKEYDATA astKeyData[], int *piPDUXML)
+{
+	int 				i;
+	int 				iRet;
+	struct stat 		sbuf;
+	TDRDATA		stHost;
+	LPSVRSKEYLIST	pstSvrskeyList;
+	
+	stHost.iBuff 		= pstEnv->stSecXML.iLen;
+	stHost.pszBuff 	= pstEnv->stSecXML.pszBuff;
+	
+	tdr_init((LPTDRMETA)pstEnv->stSecXML.iMeta, &stHost, 0);
+	memset (&sbuf, 0x00, sizeof(sbuf));
+	
+	if (stat(".sec.xml", &sbuf) == -1)
+	{
+		*piPDUXML = 0;
+		iRet = tdr_output_file((LPTDRMETA)pstEnv->stSecXML.iMeta, ".sec.xml", &stHost, 0, 0);
+		if (iRet)
+		{
+			printf ("Error: tdr_output_file\n");
+			return -1;
+		}
+	}
+	else
+	{
+		iRet = tdr_input_file((LPTDRMETA)pstEnv->stSecXML.iMeta, &stHost, ".sec.xml", 0, 0);
+		if (iRet)
+		{
+			printf ("Error:tdr_input_file\n");
+			return -1;
+		}
+		
+		pstSvrskeyList 	= (LPSVRSKEYLIST)stHost.pszBuff;
+		*piPDUXML		= pstSvrskeyList->iCount;
+		
+		for (i = 0; i < *piPDUXML && i < TCONND_MAX_PDU; i++)
+		{
+			tconnd_safe_cpy_svrskey(&astKeyData[i], &pstSvrskeyList->astSvrsKey[i]);
+		}
+	}
+	
+	return 0;
+}
+
+static int tconnd_set_svrskey_to_agent(TCONNENV *pstEnv, LPSVRSKEYDATA pstSvrsKeyData)
+{
+	int	i;
+	LPSVRSKEYINST	pstInst;
+	
+	pstInst	=	pstEnv->pstSvrsKeyInst;
+	for (i = 0; i < pstInst->stHead.iPDU; i++)
+	{
+		if (strcmp(pstInst->stBody.astSvrsKey[i].szPDUName, pstSvrsKeyData->szPDUName) == 0)
+		{
+			tconnd_safe_cpy_svrskey(&pstInst->stBody.astSvrsKey[i], pstSvrsKeyData);
+			break;
+		}
+	}
+	
+	return 0;
+}
+
+static void tconnd_print_svrskey(SVRSKEYDATA astKeyData[])
+{
+	int i;
+	for(i=0; i<TCONND_MAX_PDU; i++)
+	{
+		if (astKeyData[i].szPDUName[0])
+		{
+			printf ("PDUName:'%s'\n", astKeyData[i].szPDUName);
+			
+			printf ("SvrSKeyLen1:%d\n", astKeyData[i].iSvrSKeyLen);
+			printf ("SvrSKey:%s\n", astKeyData[i].szSvrSKey);
+			
+			printf ("SvrSKeyLen2:%d\n", astKeyData[i].iSvrSKey2Len);
+			printf ("SvrSKey:%s\n", astKeyData[i].szSvrSKey2);
+		}
+	}
+}
+
+static int tconnd_get_svrskey_from_confinst(TCONNENV *pstEnv, SVRSKEYDATA astKeyData[], int *piPDUInst)
+{
+	int	i;
+	int	idx;
+	
+	PDUINST *			pstPDUInst;
+	PDULENQQPARSER* 	pstQQParser;
+	
+	*piPDUInst = 0;
+	for (i = 0; i < pstEnv->stConfInst.stPDUInstList.iCount; i++)
+	{
+		pstPDUInst = &pstEnv->stConfInst.stPDUInstList.astInsts[i];
+		pstQQParser = &pstPDUInst->pstPDU->stLenParser.stQQParser;
+
+		if (pstPDUInst->iLenParsertype != PDULENPARSERID_BY_QQ)
+		{
+			continue;
+		}
+
+		idx	=	*piPDUInst;
+		
+		strncpy(astKeyData[idx].szPDUName, pstPDUInst->szName, TCONND_NAME_LEN);
+		astKeyData[idx].iSvrSKeyLen		= pstQQParser->iSvrSKeyLen;
+		astKeyData[idx].iSvrSKey2Len		= pstQQParser->iSvrSKey2Len;
+		
+		if (astKeyData[idx].iSvrSKeyLen < 0 ||astKeyData[idx].iSvrSKeyLen > TCONND_SVRSKEY_LEN)
+		{
+			astKeyData[idx].iSvrSKeyLen	= 	0;
+		}
+		
+		if (astKeyData[idx].iSvrSKey2Len < 0 || astKeyData[idx].iSvrSKey2Len > TCONND_SVRSKEY_LEN)
+		{
+			astKeyData[idx].iSvrSKey2Len	= 	0;
+		}
+		
+		memcpy(astKeyData[idx].szSvrSKey, pstQQParser->szSvrSKey, astKeyData[idx].iSvrSKeyLen);
+		memcpy(astKeyData[idx].szSvrSKey2, pstQQParser->szSvrSKey2, astKeyData[idx].iSvrSKey2Len);
+		
+		astKeyData[idx].szSvrSKey[astKeyData[idx].iSvrSKeyLen] 		= 0;
+		astKeyData[idx].szSvrSKey2[astKeyData[idx].iSvrSKey2Len]	= 0;
+		
+		(*piPDUInst) ++;
+	}
+	
+	return 0;
+}
+
+static int tconnd_set_svrskey_to_confinst(TCONNENV *pstEnv, SVRSKEYDATA* pstSvrskeyData)
+{
+	int	i;
+	
+	PDUINST *			pstPDUInst;
+	PDULENQQPARSER* 	pstQQParser;
+	
+	for (i = 0; i < pstEnv->stConfInst.stPDUInstList.iCount; i++)
+	{
+		pstPDUInst = &pstEnv->stConfInst.stPDUInstList.astInsts[i];
+		pstQQParser = &pstPDUInst->pstPDU->stLenParser.stQQParser;
+		
+		if (!pstQQParser->iSvrsKeyAutoUpdate)
+		{
+			continue;
+		}
+		
+		if (strcmp(pstPDUInst->szName, pstSvrskeyData->szPDUName) == 0)
+		{
+			if (pstSvrskeyData->iSvrSKeyLen <= TCONND_SVRSKEY_LEN && pstSvrskeyData->iSvrSKey2Len <= TCONND_SVRSKEY_LEN)
+			{
+				pstQQParser->iSvrSKeyLen		= pstSvrskeyData->iSvrSKeyLen;
+				pstQQParser->iSvrSKey2Len 	= pstSvrskeyData->iSvrSKey2Len;
+				
+				memcpy(pstQQParser->szSvrSKey, 	pstSvrskeyData->szSvrSKey,	pstSvrskeyData->iSvrSKeyLen);
+				memcpy(pstQQParser->szSvrSKey2, 	pstSvrskeyData->szSvrSKey2, pstSvrskeyData->iSvrSKey2Len);
+				
+				pstQQParser->szSvrSKey[pstQQParser->iSvrSKeyLen] = 0;
+				pstQQParser->szSvrSKey2[pstQQParser->iSvrSKey2Len] = 0;
+			}
+		}
+	}
+	
+	return 0;
+}
+/*
+static void encypt (const char *ept, char *dpt)
+{
+	int i = 0;
+	char c = 0x0f;
+	
+	for (i=0; i<strlen(ept); i++)
+	{
+		dpt[i] = ept[i] ^ c;
+	}
+}
+*/
+
+static int tconnd_set_svrskey_to_file(TCONNENV *pstEnv, SVRSKEYDATA astKeyData[], int iSize)
+{
+	int i;
+	TDRDATA 		stHost;
+	SVRSKEYLIST 	stSvrskeyList;
+	
+	stSvrskeyList.iCount = iSize;
+	for (i = 0; i < stSvrskeyList.iCount && i < TCONND_MAX_PDU; i++)
+	{
+		stSvrskeyList.astSvrsKey[i] = astKeyData[i];
+	}
+	
+	stHost.iBuff	= sizeof(SVRSKEYLIST);
+	stHost.pszBuff	= (char *)&stSvrskeyList;
+	
+	return tdr_output_file((LPTDRMETA)pstEnv->stSecXML.iMeta, ".sec.xml", &stHost, 0, 0);
+}
+
+static int tconnd_register_to_agent(int iBusid)
+{
+	LPEXCHANGEMNG pstExcMng = NULL;
+	if (agent_api_init(&pstExcMng) < 0)
+	{
+		printf("Error: agent_api_init failed.\n");
+		return -1;
+	}
+	
+	if (agent_api_register(pstExcMng, ID_APPID_TCONND, iBusid) < 0)
+	{
+		printf("Error: agent_api_register failed.\n");
+		return -1;
+	}
+	
+	agent_api_destroy(pstExcMng);
+	return 0;
+}
+
+static LPSVRSKEYINSTLIST tconnd_attach_svrskey_i(int iKey)
+{
+	int			i;
+	int			iSize;
+	int 			iShmID;
+	int			iExist;
+	
+	char *		pvAddr;
+	SVRSKEYINSTLIST*	pstListInst;
+	
+	iSize			=	sizeof(SVRSKEYINSTLIST);
+	iExist		=	0;
+	
+	iShmID		=	shmget(iKey, iSize, 0666 | IPC_CREAT | IPC_EXCL);
+	if (iShmID < 0)
+	{
+		iExist	=	1;
+		iShmID	=	shmget(iKey, iSize, 0666);
+	}
+	
+	if (iShmID < 0)
+	{
+		return NULL;
+	}
+	
+	pvAddr		=	shmat(iShmID, NULL, 0);
+	if (!pvAddr)
+	{
+		return NULL;
+	}
+
+	pstListInst	=	(SVRSKEYINSTLIST*)pvAddr;
+	
+	if (!iExist)
+	{
+		pstListInst->iCount	 = 0;
+		for (i = 0; i < TCONND_SVRSKEY_MAX_INST; i++)
+		{
+			pstListInst->astSvrsKeyInstList[i].stHead.iBusid = -1;
+		}
+	}
+
+	return pstListInst;
+}
+
+LPSVRSKEYINST tconnd_attach_svrskey(int iKey, int iBusid)
+{
+	int	i;
+	SVRSKEYINSTLIST*	pstListInst;
+	
+	pstListInst = tconnd_attach_svrskey_i(iKey);
+	if (!pstListInst)
+	{
+		return NULL;
+	}
+	
+	/* find */
+	for (i = 0; i < TCONND_SVRSKEY_MAX_INST; i++)
+	{
+		if (pstListInst->astSvrsKeyInstList[i].stHead.iBusid == iBusid)
+		{
+			return &pstListInst->astSvrsKeyInstList[i];
+		}
+	}
+	
+	/* insert */
+	for (i = 0; i < TCONND_SVRSKEY_MAX_INST; i++)
+	{
+		if (pstListInst->astSvrsKeyInstList[i].stHead.iBusid == -1)
+		{
+			pstListInst->iCount	 ++;
+			pstListInst->astSvrsKeyInstList[i].stHead.iBusid = iBusid;
+			return &pstListInst->astSvrsKeyInstList[i];
+		}
+	}
+	
+	return NULL;
+}
+
+int tconnd_svrskey_mgr_init(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	int				i,j;
+	int				iPDUXML;
+	int				iPDUInst;
+	
+	void*			pSem;
+	LPSVRSKEYINST	pstInst;
+	
+	SVRSKEYDATA	stCKXMLData[TCONND_MAX_PDU];
+	SVRSKEYDATA	stCKAgentData[TCONND_MAX_PDU];
+	SVRSKEYDATA	stCKTconnData[TCONND_MAX_PDU];
+
+	PDUINST *			pstPDUInst;
+	PDULENQQPARSER* 	pstQQParser;
+	
+	for (i = 0; i < pstEnv->stConfInst.stPDUInstList.iCount; i++)
+	{
+		pstPDUInst	= &pstEnv->stConfInst.stPDUInstList.astInsts[i];
+		pstQQParser	= &pstPDUInst->pstPDU->stLenParser.stQQParser;
+		
+		if (!pstQQParser->iSvrsKeyAutoUpdate)
+		{
+			continue;
+		}
+	}
+	
+	memset(stCKXMLData,   0x00, sizeof(SVRSKEYDATA)*TCONND_MAX_PDU);
+	memset(stCKAgentData, 0x00, sizeof(SVRSKEYDATA)*TCONND_MAX_PDU);
+	memset(stCKTconnData, 0x00, sizeof(SVRSKEYDATA)*TCONND_MAX_PDU);
+	
+	/* register to agent */
+	if (tconnd_register_to_agent(pstAppCtx->iBusinessID))
+	{
+		return -1;
+	}
+	
+	pstEnv->pstSvrsKeyInst	= (LPSVRSKEYINST)tconnd_attach_svrskey(TCONNDSHMKEY, pstAppCtx->iBusinessID);
+	if (!pstEnv->pstSvrsKeyInst)
+	{
+		printf ("Error: tconnd_attach_svrskey error\n");
+		return -1;
+	}
+	
+	/* lock as muti tconnd-instance with same appid and busid will visit the same shm */
+	pSem = semcreate(TCONNDSEMKEY, 1);
+	if (!pSem)
+	{
+		printf ("Error: semcreate\n");
+		return -1;
+	}
+	
+	semacquire(pSem);
+	
+	/* first read pdu info from tconnd.xml */
+	if (tconnd_get_svrskey_from_confinst(pstEnv, stCKTconnData, &iPDUInst) < 0)
+	{
+		semrelease(pSem);
+		return -1;
+	}
+	
+	/* set PDUName to Shm */
+	if (tconnd_set_pdu_to_agent(pstEnv, stCKTconnData, iPDUInst) < 0)
+	{
+		semrelease(pSem);
+		return -1;
+	}
+	
+	/* unlock */
+	semrelease(pSem);
+	semdestroy(pSem);
+	
+	if (tconnd_get_svrskey_from_agent(pstEnv, stCKAgentData) < 0)
+	{
+		return -1;
+	}
+	
+	if (tconnd_get_svrskey_from_file(pstEnv, stCKXMLData, &iPDUXML) < 0)
+	{
+		return -1;
+	}
+	
+	/* first : cp .sec.xml 2 agent */
+	pstInst	=	pstEnv->pstSvrsKeyInst;
+	for (i = 0; i < pstInst->stHead.iPDU; i++)
+	{
+		for (j = 0; j < iPDUXML; j++)
+		{
+			if (strcmp(stCKAgentData[i].szPDUName, stCKXMLData[j].szPDUName) == 0)
+			{
+				if (stCKAgentData[i].iSvrSKeyLen == 0 && stCKAgentData[i].iSvrSKey2Len == 0)
+				{
+					stCKAgentData[i] = stCKXMLData[j];
+					tconnd_set_svrskey_to_agent(pstEnv, &stCKAgentData[i]);
+				}
+			}
+		}
+	}
+	
+	/* second : cp confinst to agent if agent is null */
+	for (i = 0; i < pstInst->stHead.iPDU; i++)
+	{
+		for (j = 0; j < iPDUInst; j++)
+		{
+			if (strcmp(stCKAgentData[i].szPDUName, stCKTconnData[j].szPDUName) == 0)
+			{
+				if (stCKAgentData[i].iSvrSKeyLen == 0 && stCKAgentData[i].iSvrSKey2Len == 0)
+				{
+					stCKAgentData[i] = stCKTconnData[j];
+					tconnd_set_svrskey_to_agent(pstEnv, &stCKAgentData[i]);
+				}
+			}
+		}
+	}
+	
+	/* third : cp agent to confinst if agent not equal confinst */
+	for (i = 0; i < pstInst->stHead.iPDU; i++)
+	{
+		for (j = 0; j < iPDUInst; j++)
+		{
+			if (strcmp(stCKAgentData[i].szPDUName, stCKTconnData[j].szPDUName) == 0)
+			{
+				if (memcmp(&stCKAgentData[i], &stCKTconnData[j], sizeof(SVRSKEYDATA)))
+				{
+					stCKTconnData[j] = stCKAgentData[i];
+					tconnd_set_svrskey_to_confinst(pstEnv, &stCKTconnData[j]);
+				}
+			}
+		}
+	}
+	
+	return 0;
+}
+
+int tconnd_svrskey_mgr_compare(TCONNENV *pstEnv)
+{
+	int				i,j;
+	int				iModify;
+	int				iPDUInst;
+	
+	LPSVRSKEYINST	pstInst;
+	SVRSKEYDATA 	stCKAgentData[TCONND_MAX_PDU];
+	SVRSKEYDATA 	stCKTconnData[TCONND_MAX_PDU];
+	
+	memset(stCKAgentData, 0x00, sizeof(SVRSKEYDATA)*TCONND_MAX_PDU);
+	memset(stCKTconnData, 0x00, sizeof(SVRSKEYDATA)*TCONND_MAX_PDU);
+	
+	if (tconnd_get_svrskey_from_confinst(pstEnv, stCKTconnData, &iPDUInst) < 0)
+	{
+		return -1;
+	}
+	
+	if (tconnd_get_svrskey_from_agent(pstEnv, stCKAgentData) < 0)
+	{
+		return -1;
+	}
+	
+	iModify	=	0;
+	pstInst	=	pstEnv->pstSvrsKeyInst;
+	
+	for (i = 0; i < pstInst->stHead.iPDU; i++)
+	{
+		for (j = 0; j < iPDUInst; j++)
+		{
+			if (strcmp(stCKAgentData[i].szPDUName, stCKTconnData[j].szPDUName) == 0)
+			{
+				if (memcmp(&stCKTconnData[j], &stCKAgentData[i], sizeof(SVRSKEYDATA)))
+				{
+					iModify = 1;
+					stCKTconnData[j] = stCKAgentData[i];
+					tconnd_set_svrskey_to_confinst(pstEnv, &stCKTconnData[j]);
+				}			
+			}
+		}
+	}
+	
+	/* flush 2 .sec.xml */
+	tconnd_set_svrskey_to_file(pstEnv, stCKTconnData, iPDUInst);
+	
+	return 0;
+}
+
+int tconnd_init_svrskey(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	int	i, j;
+	int	argn = 1;
+	
+	SVRSKEYINSTLIST*	pstListInst;
+	LPSVRSKEYINST		pstInst;
+	
+	pstEnv->stSecXML.pszMetaName = "SvrsKeyList";
+	pstEnv->stSecXML.iMeta= (int) tdr_get_meta_by_name((LPTDRMETALIB)pstAppCtx->iLib, pstEnv->stSecXML.pszMetaName);
+	
+	if (pstEnv->stSecXML.iMeta)
+	{
+		pstEnv->stSecXML.iLen = tdr_get_meta_size((LPTDRMETA)pstEnv->stSecXML.iMeta);
+		pstEnv->stSecXML.pszBuff = (char *)malloc(pstEnv->stSecXML.iLen);
+	}
+	
+	while ( argn < pstAppCtx->argc)
+	{
+		if ( strncmp( pstAppCtx->argv[argn], "--svrskey-see", strlen( pstAppCtx->argv[argn] ) ) == 0 )
+		{
+			pstListInst = tconnd_attach_svrskey_i(TCONNDSHMKEY);
+			if (!pstListInst)
+			{
+				printf ("tconnd_attach_svrskey_i error\n");
+				exit(-1);
+			}
+			
+			for (i = 0; i < pstListInst->iCount; i++)
+			{			
+				pstInst	=	&pstListInst->astSvrsKeyInstList[i];
+				
+				printf ("Busid:%d\n",	pstInst->stHead.iBusid);
+				printf ("PDU:%d\n",	pstInst->stHead.iPDU);
+				
+				for (j = 0; j < pstInst->stHead.iPDU; j++)
+				{
+					printf ("PDUName:'%s'\n", 	pstInst->stBody.astSvrsKey[j].szPDUName);
+					printf ("SvrSKeyLen1:%d\n",	pstInst->stBody.astSvrsKey[j].iSvrSKeyLen);
+					printf ("SvrSKey:%s\n", 	pstInst->stBody.astSvrsKey[j].szSvrSKey);
+					printf ("SvrSKeyLen2:%d\n",	pstInst->stBody.astSvrsKey[j].iSvrSKey2Len);
+					printf ("SvrSKey:%s\n", 	pstInst->stBody.astSvrsKey[j].szSvrSKey2);
+				}
+			}
+			
+			exit (0);
+		}
+		
+		++argn;
+	}
+	
+	if( tconnd_svrskey_mgr_init(pstAppCtx, pstEnv) < 0 )
+	{
+		return -1;
+	}
+	
+	return 0;
+}
+
+int tconnd_make_frame(TDRDATA* pstFrame, TDRDATA* pstMsg, TFRAMEHEAD* pstFrameHead)
+{
+	TDRDATA stHost;
+	TDRDATA stNet;
+
+	/* do process the msg. */
+	stHost.pszBuff	=	(char*) pstFrameHead;
+	stHost.iBuff	=	(int)sizeof(*pstFrameHead);
+
+	stNet.pszBuff	=	pstFrame->pszBuff;
+	stNet.iBuff	=	pstFrame->iBuff;
+
+
+	if( TCONNAPI_FRAMEHEAD_HTON(&stNet,&stHost,  0)<0 )
+	{
+		return -1;
+	}
+
+	if( stNet.iBuff + pstMsg->iBuff > pstFrame->iBuff )
+	{
+		return -1;
+       }
+
+	pstFrame->iBuff	=	stNet.iBuff + pstMsg->iBuff;
+
+	if( pstMsg->iBuff )
+	{
+		memcpy(stNet.pszBuff+stNet.iBuff, pstMsg->pszBuff, pstMsg->iBuff);
+	}
+
+	return 0;
+}
+
+
+int tconnd_pop_queue(TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+	TRANSINST* pstTransInst;
+	TCONNINST* pstPrev;
+	TCONNINST* pstNext;
+
+	pstInst->iIsInQueue	=	0;
+
+	pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+
+	pstTransInst->stConnInfo.iActive++;
+	pstTransInst->stConnInfo.iWait--;
+
+	pstTransInst->uiTokenPass	=	pstInst->uiQueueToken;
+
+	if( pstTransInst->iWaitQueueHead == pstInst->iIdx )
+	{
+		pstTransInst->iWaitQueueHead	=	pstInst->iQueueNext;
+	}
+
+	if( pstTransInst->iWaitQueueTail == pstInst->iIdx )
+	{
+		pstTransInst->iWaitQueueTail	=	pstInst->iQueuePrev;
+	}
+
+	if( -1!=pstInst->iQueuePrev )
+	{
+		pstPrev	=	tconnd_get_inst( pstThread->pstPool, pstInst->iQueuePrev );
+
+		if( pstPrev )
+		{
+			pstPrev->iQueueNext	=	pstInst->iQueueNext;
+		}
+	}
+
+	if( -1!=pstInst->iQueueNext )
+	{
+		pstNext	=	tconnd_get_inst( pstThread->pstPool, pstInst->iQueueNext );
+
+		if( pstNext )
+		{
+			pstNext->iQueuePrev	=	pstInst->iQueuePrev;
+		}
+	}
+
+	return 0;
+}
+
+int tconnd_push_queue(TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+	TRANSINST* pstTransInst;
+	TCONNINST* pstPrev;
+
+	
+       pstInst->iIsInQueue	=	1;
+	
+	pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+	pstTransInst->uiTokenAlloc++;
+	pstInst->uiQueueToken	=	pstTransInst->uiTokenAlloc;
+
+
+
+	pstTransInst->stConnInfo.iIdle--;
+	pstTransInst->stConnInfo.iWait++;
+
+	if( -1==pstTransInst->iWaitQueueTail )
+	{
+		pstInst->iQueuePrev	=	-1;
+		pstInst->iQueueNext	=	-1;
+
+		pstTransInst->iWaitQueueHead	=	pstInst->iIdx;
+		pstTransInst->iWaitQueueTail	=	pstInst->iIdx;
+	}
+	else
+	{
+		pstInst->iQueuePrev	=	pstTransInst->iWaitQueueTail;
+		pstInst->iQueueNext	=	-1;
+
+		pstPrev	=	tconnd_get_inst(pstThread->pstPool, pstTransInst->iWaitQueueTail);
+
+		if( pstPrev )
+		{
+			pstPrev->iQueueNext	=	pstInst->iIdx;
+		}
+
+		pstTransInst->iWaitQueueTail	=	pstInst->iIdx;
+	}
+
+	return 0;
+
+}
+
+int tconnd_sendto_serinst_by_bus(TCONNTHREAD* pstThread, TFRAMEHEAD* pstHead, TDRDATA* pstMsg, int iDst)
+{
+	int iRet;
+	int iSrc;
+	char szPkg[sizeof(TFRAMEHEAD)];
+	TDRDATA stHost;
+	TDRDATA stNet;
+	struct iovec astIOVec[2];
+
+	stHost.pszBuff	=	(char*)pstHead;
+	stHost.iBuff	=	(int)sizeof(*pstHead);
+
+	stNet.pszBuff	=	(char*)szPkg;
+	stNet.iBuff	=	(int)sizeof(szPkg);
+
+	iRet	=	TCONNAPI_FRAMEHEAD_HTON(&stNet, &stHost, 0);
+
+	if( iRet<0 )
+		return -1;
+
+	iSrc	=	0;
+
+	if( pstMsg && pstMsg->iBuff )
+	{
+		astIOVec[0].iov_base	=	(void*)stNet.pszBuff;
+		astIOVec[0].iov_len	=	(size_t)stNet.iBuff;
+		astIOVec[1].iov_base	=	(void*)pstMsg->pszBuff;
+		astIOVec[1].iov_len	=	(size_t)pstMsg->iBuff;
+		iRet	=	tbus_sendv( pstThread->pstAppCtx->iBus, &iSrc, &iDst, astIOVec, 2, 0);
+	}
+	else
+	{
+              
+		//iRet	=	tbus_send( pstThread->pstAppCtx->iBus, &iSrc, &iDst, stNet.pszBuff, stNet.iBuff, 0);
+		iRet = tbus_backward(pstThread->pstAppCtx->iBus, &iSrc, &iDst, stNet.pszBuff, stNet.iBuff, 0);
+	}
+
+	return iRet;
+}
+
+
+int tconnd_sendto_serinst(TCONNTHREAD* pstThread, TCONNINST* pstInst, TDRDATA* pstFrame)
+{
+	int i;
+	int iSrc;
+	int iDst;
+	TCONND* pstConnd;
+	CONFINST* pstConfInst;
+	TCONNDRUN_CUMULATE* pstRunCum;
+	SERINSTLIST* pstSerInstList;
+	TRANSINST* pstTransInst;
+	NETTRANSRUN* pstTransRun;
+	SERINST* pstSerInst;
+	SERIALIZERRUN* pstSerRun;
+	HEADROUTE astRoute[2];
+	int iRet = 0;
+	int iFrame;
+
+	iFrame		=	pstFrame->iBuff;
+
+	pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+	pstConfInst	=	pstThread->pstConfInst;
+	pstRunCum		=	(TCONNDRUN_CUMULATE*) pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+
+	pstTransRun	=	pstRunCum->stNetTransRunList.astNetTrans + pstInst->iTransLoc;
+
+	pstTransRun->stTransStat.llRecvPkgSucc++;
+	pstTransRun->stTransStat.llRecvByteSucc	+=	iFrame;
+
+	pstSerInstList	=	&pstConfInst->stSerInstList;
+
+	if( !pstInst->iSendFirstFrame )
+       {
+	      pstInst->iSendFirstFrame	=	1;
+	}
+
+	/* send to all serializer */
+	for(i=0; i<pstTransInst->iSerCount; i++)
+	{
+		pstSerInst	=	pstSerInstList->astInsts + pstTransInst->aiSerLoc[i];
+		pstSerRun	=	pstRunCum->stSerializerRunList.astSerializers + pstTransInst->aiSerLoc[i];
+
+		iSrc		=	0;
+		iDst		=	pstSerInst->iDst;
+
+		iRet	=	tbus_send( pstThread->pstAppCtx->iBus, &iSrc, &iDst, pstFrame->pszBuff, pstFrame->iBuff, 0);
+
+		if( iRet<0 )
+		{
+			//pstInst->iFailedMsg++;
+
+			pstSerRun->stTransStat.llSendPkgFail++;
+			pstSerRun->stTransStat.llSendByteFail	+=	iFrame;
+			tlog_error(pstThread->pstLog, 0, 0,"Send package to tbus failed:des=%s :datelen =%d\n",inet_ntoa(*(struct in_addr *)&iDst),pstFrame->iBuff);	
+		}
+		else
+		{
+			pstSerRun->stTransStat.llSendPkgSucc++;
+			pstSerRun->stTransStat.llSendByteSucc	+=	iFrame;
+                     tlog_debug(pstThread->pstLog, 0, 0,"Send package to tbus success:desc=%s:datelen =%d\n",inet_ntoa(*(struct in_addr *)&iDst),pstFrame->iBuff);
+			
+		}
+	}
+
+	/* send to lisviewer */
+	if( pstConnd->iEnableViewer && pstTransInst->iLisViewerLoc>=0 )
+	{
+		astRoute[0].iSrc	=	iSrc;
+		astRoute[1].iSrc	=	iDst;
+
+		pstSerInst	=	pstConfInst->stSerInstList.astInsts + pstTransInst->iLisViewerLoc;
+		pstSerRun	=	pstRunCum->stSerializerRunList.astSerializers + pstTransInst->iLisViewerLoc;
+	
+		iSrc		=	pstThread->pstAppCtx->iId;
+		iDst		=	pstSerInst->iDst;
+
+		iRet		=	tbus_set_pkg_route( pstThread->pstAppCtx->iBus, astRoute, 2);
+
+		if( 0==iRet )
+		{
+			iRet	=	tbus_forward( pstThread->pstAppCtx->iBus, &iSrc, &iDst, pstFrame->pszBuff, pstFrame->iBuff, 0);
+		}
+
+		if( iRet<0 )
+		{
+			pstSerRun->stTransStat.llSendPkgFail++;
+			pstSerRun->stTransStat.llSendByteFail	+=	iFrame;
+			tlog_error(pstThread->pstLog, 0, 0,"forward package to tbus failed:des=%s :datelen =%d\n",inet_ntoa(*(struct in_addr *)&iDst),pstFrame->iBuff);
+		}
+		else
+		{
+			pstSerRun->stTransStat.llSendPkgSucc++;
+			pstSerRun->stTransStat.llSendByteSucc	+=	iFrame;
+			tlog_debug(pstThread->pstLog, 0, 0,"forward package to tbus success:des=%s :datelen =%d\n",inet_ntoa(*(struct in_addr *)&iDst),pstFrame->iBuff);
+		}
+	}
+
+	return 0;
+}
+
+
+int tconnd_sendto_lisinst(TCONNTHREAD* pstThread, TCONNINST* pstInst, TDRDATA* pstPkg)
+{
+	TCONND* pstConnd;
+	CONFINST* pstConfInst;
+	TCONNDRUN_CUMULATE* pstRunCum;
+	NETTRANS* pstNetTrans;
+	TRANSINST* pstTransInst;
+	SERINST* pstSerInst;
+	NETTRANSRUN* pstTransRun;
+	LISTENERRUN* pstLisRun;
+	SERIALIZERRUN* pstSerRun;
+
+	int iSrc;
+	int iDst;
+
+	int iSend;
+	int iRet;
+
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+	pstConfInst	=	pstThread->pstConfInst;
+	pstRunCum		=	(TCONNDRUN_CUMULATE *)pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+
+
+	pstNetTrans	=	pstConnd->stNetTransList.astNetTrans + pstInst->iTransLoc;
+	pstTransInst	=	pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+	pstTransRun	=	pstRunCum->stNetTransRunList.astNetTrans + pstInst->iTransLoc;
+	pstLisRun	=	pstRunCum->stListenerRunList.astListeners + pstInst->iLisLoc;
+
+	if( pstInst->iNeedFree )
+	{
+		tlog_error(pstThread->pstLog, 0, 0, "conn(%s:%d) need to free,reason=%d, so cannot send data",
+			inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr), 
+			NTOHS(((struct sockaddr_in*)&pstInst->stAddr)-> sin_port),
+			pstInst->iNeedFree);
+	       pstTransRun->stTransStat.llSendPkgFail++;
+		pstTransRun->stTransStat.llSendPkgFail+=pstPkg->iBuff;  
+		pstLisRun->stTransStat.llSendPkgFail++;
+		pstLisRun->stTransStat.llSendByteFail +=	pstPkg->iBuff;
+		return -1;
+	}
+
+	if( !pstInst->iSendFirstPkg )
+	{
+		pstInst->iSendFirstPkg	=	1;
+	}
+
+	if( pstInst->fStream )
+	{
+		iSend	= send(pstInst->s, pstPkg->pszBuff, pstPkg->iBuff, 0);
+	}
+	else
+	{
+		iSend	= sendto(pstInst->s, pstPkg->pszBuff, pstPkg->iBuff, 0, &pstInst->stAddr, sizeof(pstInst->stAddr));
+	}
+
+	
+
+	if( iSend==pstPkg->iBuff )
+	{
+		pstLisRun->stTransStat.llSendPkgSucc++;
+		pstLisRun->stTransStat.llSendByteSucc +=	iSend;
+		pstTransRun->stTransStat.llSendPkgSucc++;
+		pstTransRun->stTransStat.llSendByteSucc +=	iSend;
+		tlog_debug(pstThread->pstLog, 0, 0,"send package to client success:des=%s:%d :datelen =%d\n",inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),iSend);
+	}
+	else
+	{
+		pstLisRun->stTransStat.llSendPkgFail++;
+		pstLisRun->stTransStat.llSendByteFail +=	pstPkg->iBuff;
+		pstTransRun->stTransStat.llSendPkgFail++;
+		pstTransRun->stTransStat.llSendByteFail +=	pstPkg->iBuff;
+		tlog_error(pstThread->pstLog, 0, 0,"send package to client failed:des=%s:%d :datelen =%d\n",inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),iSend);
+		tlog_error(pstThread->pstLog, 0, 0,"send package to client failed:errorsting=%s\n",strerror(errno));
+	}
+
+	/* send to serviewer */
+	if( pstConnd->iEnableViewer && pstTransInst->iSerViewerLoc>=0 )
+	{
+		pstSerInst	=	pstConfInst->stSerInstList.astInsts + pstTransInst->iSerViewerLoc;
+		pstSerRun	=	pstRunCum->stSerializerRunList.astSerializers + pstTransInst->iSerViewerLoc;
+
+		iSrc		=	0;
+		iDst		=	pstSerInst->iDst;
+
+		iRet	=	tbus_forward( pstThread->pstAppCtx->iBus, &iSrc, &iDst, pstPkg->pszBuff, pstPkg->iBuff, 0);
+
+		if( iRet<0 )
+		{
+			pstSerRun->stTransStat.llSendPkgFail++;
+			pstSerRun->stTransStat.llSendByteFail	+=	pstPkg->iBuff;
+			tlog_error(pstThread->pstLog, 0, 0,"forward package to tbus failed:des=%s :datelen =%d\n",inet_ntoa(*(struct in_addr *)&iDst),pstPkg->iBuff);
+		}
+		else
+		{
+			pstSerRun->stTransStat.llSendPkgSucc++;
+			pstSerRun->stTransStat.llSendByteSucc	+=	pstPkg->iBuff;
+			tlog_debug(pstThread->pstLog, 0, 0,"forward package to tbus success:des=%s :datelen =%d\n",inet_ntoa(*(struct in_addr *)&iDst),pstPkg->iBuff);
+		}
+	}
+
+
+	if( iSend!=pstPkg->iBuff )
+	{
+		pstInst->iNeedFree	=	TFRAMEHEAD_REASON_NETWORK_FAIL;
+		pstInst->iNotify	=	1;
+
+		pstTransInst->iSendFailed++;
+
+		iRet	=	-1;
+	}
+	else
+	{
+		iRet	=	0;
+	}
+
+	if( gs_tNow - pstTransInst->tLastSendCheck > pstTransInst->iSendCheckInterval )
+	{
+		pstTransInst->iConnPermitLow	=	pstNetTrans->stConnLimit.iPermit/2;
+		pstTransInst->iConnPermitHigh	=	pstNetTrans->stConnLimit.iPermit;
+
+		if( pstTransInst->iSendFailed > 0 )
+		{
+			if( pstTransInst->iConnMaxSpeed < pstTransInst->iSendFailed)
+				pstTransInst->iConnMaxSpeed	=	pstTransInst->iSendFailed;
+
+			pstTransInst->iConnPermit	-=	pstTransInst->iSendFailed;
+
+			if( pstTransInst->iConnPermit < pstTransInst->iConnPermitLow )
+				pstTransInst->iConnPermit = pstTransInst->iConnPermitLow;
+		}
+		else
+		{
+			pstTransInst->iConnPermit = pstTransInst->iConnPermit + pstTransInst->iConnMaxSpeed;
+
+			if( pstTransInst->iConnPermit >= pstTransInst->iConnPermitHigh )
+			{
+				pstTransInst->iConnPermit	=	pstTransInst->iConnPermitHigh;
+				pstTransInst->iConnMaxSpeed	=	0;
+			}
+		}
+
+		pstTransInst->tLastSendCheck	=	gs_tNow;
+
+		pstTransInst->iPrevSendFailed	=	pstTransInst->iSendFailed;
+		pstTransInst->iSendFailed	=	0;
+	}
+
+
+	return iRet;
+}
+
+
+int tconnd_notify_serinst_close(TCONNTHREAD* pstThread, TCONNINST* pstInst, int iReason)
+{
+	int iRet;
+	TCONND* pstConnd;
+	TFRAMEHEAD stFrameHead;
+	char szPkg[sizeof(TFRAMEHEAD)];
+	struct timeval stCurr;
+	TDRDATA stHost;
+	TDRDATA stNet;
+
+	pstConnd	=	(TCONND*) pstThread->pstAppCtx->stConfData.pszBuff;
+
+	stFrameHead.chVer	=	0;
+	stFrameHead.chCmd	=	TFRAMEHEAD_CMD_STOP;
+
+	stFrameHead.iID		=	pstInst->iID;
+	stFrameHead.iConnIdx=	pstInst->iIdx;
+
+	stFrameHead.chExtraType	=	0;
+
+	if( pstInst->iNeedFree )
+	{
+		stFrameHead.stCmdData.stStop.iReason	=	pstInst->iNeedFree;
+	}
+	else
+	{
+		stFrameHead.stCmdData.stStop.iReason	=	iReason;
+	}
+
+	if( pstInst->iUseTimeStamp )
+	{
+		stFrameHead.chTimeStampType	=	TFRAMEHEAD_TIMESTAMP_TIMEVAL;
+
+		gettimeofday(&stCurr, NULL);
+			
+		stFrameHead.stTimeStamp.stTimeVal.iSec	=	(int)stCurr.tv_sec;
+		stFrameHead.stTimeStamp.stTimeVal.iUsec	=	(int)stCurr.tv_usec;
+	}
+	else
+	{
+		stFrameHead.chTimeStampType	=	0;
+	}
+
+	stHost.pszBuff	=	(char*)&stFrameHead;
+	stHost.iBuff	=	(int)sizeof(stFrameHead);
+
+	stNet.pszBuff	=	(char*)szPkg;
+	stNet.iBuff		=	(int)sizeof(szPkg);
+
+	iRet	=	TCONNAPI_FRAMEHEAD_HTON(&stNet, &stHost, 0);
+
+	if( iRet<0 )
+	{
+		return -1;
+	}
+
+	iRet	=	tconnd_sendto_serinst(pstThread, pstInst, &stNet);
+
+	return iRet;
+}
+
+
+int tconnd_safe_close(TCONNTHREAD* pstThread, int iIdx, int iReason, int iIsNotify)
+{
+	int iRet;
+	TCONNINST* pstInst;
+	TRANSINST* pstTransInst;
+
+	pstInst	=	tconnd_get_inst( pstThread->pstPool, iIdx);
+
+	if( !pstInst )
+	{
+		return -1;
+	}
+
+	if( pstInst->s>=0 )
+	{
+		tnet_close(pstInst->s);
+		tlog_debug(pstThread->pstLog, 0,0, "close the connection with Idx=%d:client(%s:%d:%d), iReason:%d",
+			iIdx,inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr), 
+			NTOHS(((struct sockaddr_in*)&pstInst->stAddr)-> sin_port),pstInst->s, iReason);
+
+		pstInst->s	=	-1;
+	}
+
+	pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+
+	if( -1!=pstInst->iID && pstInst->iSendFirstFrame && iIsNotify )
+	{
+		iRet	=	tconnd_notify_serinst_close(pstThread, pstInst, iReason);
+	}
+
+	if( pstInst->iIsInQueue )
+	{
+		tconnd_pop_queue(pstThread, pstInst);
+	}
+
+	if( pstInst->iAuthPass )
+	{
+		pstTransInst->stConnInfo.iActive--;
+	}
+	else
+	{
+		pstTransInst->stConnInfo.iIdle--;
+	}
+
+	tconnd_free_inst(pstThread->pstPool, iIdx);
+
+	pstTransInst->stConnInfo.iTotal--;
+
+	return 0;
+}
+
+
+int tconnd_add_conn(TCONNTHREAD* pstThread, int s, int iTransLoc, int iLisLoc, int iIsListen, struct sockaddr* pstAddr)
+{
+	TCONND* pstConnd;
+	TCONNDRUN_CUMULATE* pstRunCum;
+	CONFINST* pstConfInst;
+	LISTENER* pstListener;
+	TRANSINST* pstTransInst;
+	NETTRANS* pstNetTrans;
+	TCONNINST* pstInst;
+	LISTENERRUN* pstLisRun;
+
+
+	int iRet;
+	int iType;
+	epoll_event_t e;
+
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+	pstConfInst	=	pstThread->pstConfInst;
+	pstRunCum		=	(TCONNDRUN_CUMULATE *)pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+
+	pstTransInst	=	pstConfInst->stTransInstList.astInsts + iTransLoc;
+
+	pstListener	=	pstConnd->stListenerList.astListeners + iLisLoc;
+	pstNetTrans	=	pstConnd->stNetTransList.astNetTrans + iTransLoc;
+
+	pstLisRun	=	pstRunCum->stListenerRunList.astListeners + iLisLoc;
+
+	if( -1==s )
+	{
+		if( iIsListen )
+		{
+			tlog_error(pstThread->pstLog, 0, 0, "listen on %s failed.\n", pstListener->szUrl);
+		}
+		else
+		{
+			tlog_error(pstThread->pstLog, 0, 0, "accept from epoll failed.errorstring=%s\n",strerror(errno));
+		}
+
+		return -1;
+	}
+
+	if( pstNetTrans->stConnLimit.iMaxConn && pstTransInst->stConnInfo.iTotal>=pstNetTrans->stConnLimit.iMaxConn )
+	{
+		tnet_close(s);
+		tlog_error(pstThread->pstLog, 0, 0, "nettrans \'%s\' reach max conn limit %d. \n", pstNetTrans->szName, pstNetTrans->stConnLimit.iMaxConn);
+		return -1;
+	}
+
+	iType	=	SOCK_STREAM;
+
+	tsocket_get_type(s, &iType);
+	
+	iRet	=	tnet_set_nonblock(s, 1);
+	if( iRet<0 )
+	{
+		tnet_close(s);
+		tlog_error(pstThread->pstLog, 0, 0, "set socket to non-block failed. \n");
+		return -1;
+	}
+
+	if( !iIsListen )
+	{
+		if( pstListener->iSendBuff>0 )
+		{
+			tnet_set_sendbuff(s, pstListener->iSendBuff);
+		}
+		if( pstListener->iRecvBuff>0 )
+		{
+			tnet_set_recvbuff(s, pstListener->iRecvBuff);
+		}
+	}
+	
+	e.events	=	EPOLLIN;
+	e.data.fd	=	tconnd_alloc_inst(pstThread->pstPool);
+	
+	if(e.data.fd<0)
+	{
+		tnet_close(s);
+		tlog_error(pstThread->pstLog, 0, 0, "alloc conn instance for listen socket failed.\n");
+		return -1;
+	}
+
+	(&e.data.fd)[1]	=	s;
+	
+	pstInst		=	tconnd_get_inst(pstThread->pstPool, e.data.fd);
+
+	memset(pstInst, 0, offsetof(TCONNINST, szBuff));
+
+	pstInst->s		=	s;
+	pstInst->iIdx		=	e.data.fd;
+	pstInst->iTransLoc	=	iTransLoc;
+	pstInst->iLisLoc	=	iLisLoc;
+
+	pstInst->fListen	=	iIsListen;
+
+	if( SOCK_STREAM==iType )
+	{
+		pstInst->fStream	=	1;
+	}
+	else
+	{
+		pstInst->fStream	=	0;
+	}
+
+	if( !iIsListen && SOCK_STREAM==iType )
+	{
+		pstInst->fWaitFirstPkg	=	1;
+	}
+	else
+	{
+		pstInst->fWaitFirstPkg	=	0;
+	}
+
+	pstInst->iID		=	-1;
+
+	pstInst->tCreate	=	gs_tNow;
+	pstInst->tLastRecv	=	gs_tNow;
+			
+	pstInst->iQueuePrev	=	-1;
+	pstInst->iQueueNext	=	-1;
+
+	if( pstAddr )
+	{
+		memcpy(&pstInst->stAddr, pstAddr, sizeof(pstInst->stAddr));
+	}
+	else
+	{
+		memset(&pstInst->stAddr, 0, sizeof(pstInst->stAddr));
+	}
+
+	pstInst->iBuff  	=	pstThread->iPkgUnit;
+	pstInst->iUseTimeStamp	=	pstNetTrans->iUseTimeStamp;
+
+	tconnd_randstr(pstInst->szIdent, (int)sizeof(pstInst->szIdent));
+				
+	if( -1==epoll_ctl(pstThread->epfd, EPOLL_CTL_ADD, s, &e) )
+	{
+		pstLisRun->stConnStat.iEpollFail++;
+
+		tnet_close(s);
+		tconnd_free_inst(pstThread->pstPool, e.data.fd);
+
+		tlog_error(pstThread->pstLog, 0, 0, "add listen socket to epoll-fd failed.\n");
+
+		return -1;
+	}
+
+	pstTransInst->stConnInfo.iTotal++;
+	pstTransInst->stConnInfo.iIdle++;
+
+	tlog_debug(pstThread->pstLog, 0, 0, "Add one socket(%d) to connInst(%d), peer info(%s:%d)",
+		pstInst->s, pstInst->iIdx, inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr), 
+			NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port));
+
+	return 0;
+}
+
+
+int tconnd_init_single(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	int i;
+	int j;
+	int s;
+	int iRet;
+	int iLimit;
+	int iUpUnit = 0;
+	int iBuff = 0;
+	TCONND* pstConnd;
+	TCONNPOOL* pstPool;
+	CONFINST* pstConfInst;
+	NETTRANSLIST* pstNetTransList;
+	LISTENERLIST* pstListenerList;
+	NETTRANS* pstNetTrans;
+	TRANSINST* pstTransInst;
+	SERIALIZERLIST* pstSerializerList;
+	LISTENER* pstListener;
+	PDUINST* pstPDUInst;
+	TCONNTHREAD* pstThread;
+
+	pstThread	=	&pstEnv->astThreads[0];
+	pstThread->pstAppCtx	=	pstAppCtx;
+	pstThread->pstConfInst	=	&pstEnv->stConfInst;
+
+	pstThread->iScanHerz	=	0;
+	if( pstAppCtx->iTimer )
+	{
+		pstThread->iScanHerz	=	1000/pstAppCtx->iTimer;
+	}
+
+	if( pstThread->iScanHerz<=0 )
+	{
+              printf("error:invalid timer value:=%d\n",pstAppCtx->iTimer);
+		//pstThread->iScanHerz	=	1;
+	}
+
+	pstThread->iRecvSlices=Time_Slice_Count/2;
+	pstThread->iWaitToSend=0;
+
+	
+
+	pstThread->pstLog	=	NULL;
+	tapp_get_category(NULL, (int*)&pstThread->pstLog);
+
+	if( !pstThread->pstLog )
+	{
+		printf("error: can not get default log category.\n");
+		return -1;
+	}
+
+	tlog_crit(pstThread->pstLog, 0, 0, "begin initialize, single-threaded.\n");
+
+	if( pstAppCtx->stConfData.iLen < (int)sizeof(TCONND) )
+	{
+		tlog_error(pstThread->pstLog, 0, 0, "config meta is too old.\n");
+		return -1;
+	}
+
+	pstConfInst		=	&pstEnv->stConfInst;
+	pstConnd		=	(TCONND*) pstAppCtx->stConfData.pszBuff;
+
+	pstNetTransList	=	&pstConnd->stNetTransList;
+	pstListenerList	=	&pstConnd->stListenerList;
+	pstSerializerList=	&pstConnd->stSerializerList;
+
+	iLimit	=	pstConnd->iMaxFD;
+
+	tlog_debug_dr(pstThread->pstLog, 0, 0, (LPTDRMETA)pstAppCtx->stConfData.iMeta,
+		pstConnd, sizeof(TCONND), 0);
+	if( iLimit<=0 )
+	{
+		iLimit	=	0;
+
+		for(i=0; i<pstConnd->stNetTransList.iCount; i++)
+		{
+			pstNetTrans	=	&pstNetTransList->astNetTrans[i];
+			iLimit		+=	pstNetTrans->stConnLimit.iMaxConn;
+		}
+	}
+
+	if( iLimit<=0 )
+	{
+		tlog_error(pstThread->pstLog, 0, 0, "the max-conn is %d, <=0.\n", iLimit);
+		return -1;
+	}
+
+
+	for(i=0; i<pstConnd->stNetTransList.iCount; i++)
+	{
+		pstPDUInst	=	pstConfInst->stPDUInstList.astInsts + pstConfInst->stTransInstList.astInsts[i].iPDULoc;
+
+		if( iUpUnit < pstPDUInst->iUpUnit )
+		{
+		    iUpUnit	=	pstPDUInst->iUpUnit;
+		}
+		if( iBuff < pstPDUInst->iUnit)
+		{
+                  iBuff =  pstPDUInst->iUnit;
+		}
+	}
+
+	if( iBuff<=0 )
+	{
+		tlog_error(pstThread->pstLog, 0, 0, "the max pdu unit size is %d, <=0.\n", iBuff);
+		return -1;
+	}
+
+	pstThread->iPkgUnit	=	iUpUnit;
+	pstThread->iPoolUnit	=	pstThread->iPkgUnit + (int) offsetof(TCONNINST, szBuff);
+
+	iRet	=	tconnd_init_pool(&pstThread->pstPool, iLimit, pstThread->iPoolUnit);
+
+	if( iRet<0 )
+	{
+		tlog_error(pstThread->pstLog, 0, 0, "tconnd_init_pool failed, max=%d, unit=%d.\n", iLimit, pstThread->iPoolUnit);
+		return -1;
+	}
+
+	pstPool	=	pstThread->pstPool;
+
+	pstThread->epfd	=	epoll_create(iLimit);
+	if( -1==pstThread->epfd )
+	{
+		tlog_error(pstThread->pstLog, 0, 0, "create epoll-fd[MAXFD=%d] failed.errorstring=%s\n", iLimit,strerror(errno));
+
+		return -1;
+	}
+
+	for(i=0; i<pstNetTransList->iCount; i++)
+	{
+		pstTransInst	=	&pstConfInst->stTransInstList.astInsts[i];
+
+		for(j=0; j<pstTransInst->iLisCount; j++)
+		{
+			pstListener	=	pstListenerList->astListeners + pstTransInst->aiLisLoc[j];
+	
+			s	=	tnet_listen(pstListener->szUrl, pstListener->iBacklog);
+
+			if( tconnd_add_conn(pstThread, s, i, pstTransInst->aiLisLoc[j], 1, NULL)<0 )
+			{
+                            tlog_error(pstThread->pstLog, 0, 0, "tconnd_add_conn failed.\n");
+				return -1;
+			}
+
+		}
+	}
+
+
+	pstThread->iSendBuff	=	iBuff + sizeof(TFRAMEHEAD);
+	pstThread->pszSendBuff	=	malloc(pstThread->iSendBuff);
+	pstThread->iRecvBuff	=	iBuff + sizeof(TFRAMEHEAD);
+	pstThread->pszRecvBuff	=	malloc(pstThread->iRecvBuff);
+
+	pstThread->iMsgBuff	=	iBuff + sizeof(TFRAMEHEAD);
+	pstThread->pszMsgBuff	=	malloc(pstThread->iMsgBuff);
+
+	if( !pstThread->pszSendBuff || !pstThread->pszRecvBuff || !pstThread->pszMsgBuff )
+	{
+		tlog_error(pstThread->pstLog, 0, 0, "alloc thread buffer size %d failed.\n", pstThread->iSendBuff);
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int tconnd_get_pkglen(TCONNINST* pstInst, TCONNTHREAD* pstThread)
+{
+	TRANSINST* pstTransInst;
+	PDUINST* pstPDUInst;
+	char* pszBuff;
+	LPPDULENTDRPARSERINST pstTDRParser; 
+	char *pszDataBase;
+
+	pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+	pstPDUInst	=	pstThread->pstConfInst->stPDUInstList.astInsts + pstTransInst->iPDULoc;
+	pstTDRParser = &pstPDUInst->stLenParser.stTDRParser;
+
+	pszDataBase = pstInst->szBuff + pstInst->iOff; 
+	if( 0 < pstTDRParser->iPkgLenUnitSize )
+	{
+		if( pstInst->iData < (pstTDRParser->iPkgLenNOff + pstTDRParser->iPkgLenUnitSize))
+		{
+			return -1;
+		}
+
+		pszBuff	=	pszDataBase + pstTDRParser->iPkgLenNOff;
+
+		TDR_GET_INT_NET(pstInst->iPkgLen, pstTDRParser->iPkgLenUnitSize, pszBuff);
+
+		pstInst->iPkgLen	*=	pstTDRParser->iPkgLenMultiplex;
+	}
+	else
+	{
+		if( pstInst->iData < (pstTDRParser->iHeadLenNOff + pstTDRParser->iHeadLenUnitSize))
+		{
+			return -1;
+		}
+
+		pszBuff		=	pszDataBase + pstTDRParser->iHeadLenNOff;
+
+		TDR_GET_INT_NET(pstInst->iHeadLen, pstTDRParser->iHeadLenUnitSize, pszBuff);
+
+		pstInst->iHeadLen	*=	pstTDRParser->iHeadLenMultiplex;
+
+
+		if( pstInst->iData < (pstTDRParser->iBodyLenNOff + pstTDRParser->iBodyLenUnitSize))
+		{
+			return -1;
+		}
+
+		pszBuff		=	pszDataBase + pstTDRParser->iBodyLenNOff;
+
+		TDR_GET_INT_NET(pstInst->iPkgLen, pstTDRParser->iBodyLenUnitSize, pszBuff);
+
+		pstInst->iPkgLen	*=	pstTDRParser->iBodyLenMultiplex;
+
+		pstInst->iPkgLen	+=	pstInst->iHeadLen;
+	}
+
+	if( pstInst->iPkgLen<=0 )
+	{
+		pstInst->iNeedFree	=	TFRAMEHEAD_REASON_BAD_PKGLEN;
+		pstInst->iNotify	=	0;
+		return -1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+/*int tconnd_do_relay(TCONNINST* pstInst, TQQUSERIDENT* pstUserIdent, TCONNTHREAD* pstThread)
+{
+	TCONNINST* pstInstOld;
+	TFRAMEHEAD stFrameHead;
+	struct timeval stCurr;
+	TDRDATA stFrame;
+	TDRDATA stMsg;
+	char szFrameBuff[sizeof(TFRAMEHEAD)];
+	TIPINFO* pstIPInfo;
+
+	if( -1==pstUserIdent->iPos )
+		return 0;
+
+	pstInstOld	=	tconnd_get_inst(pstThread->pstPool, pstUserIdent->iPos);
+	if( !pstInstOld )
+	{
+		return 0;      // treat it as a new connection.
+	}	
+
+	if( memcmp(pstInstOld->szIdent, pstUserIdent->szIdent, sizeof(pstInstOld->szIdent) ) )
+		return -1;
+
+	if( -1!=pstInstOld->s )
+		return -1;
+
+	if( pstInst->iAuthType!=pstInstOld->iAuthType && pstInst->stAuthData.stAuthQQV1.lUin!=pstInstOld->stAuthData.stAuthQQV1.lUin)
+		return -1;
+
+	// steal the nettransinst 
+
+	stFrameHead.chVer	=	0;
+	stFrameHead.chCmd	=	TFRAMEHEAD_CMD_RELAY;
+
+	stFrameHead.iID		=	pstInst->iID;
+	stFrameHead.iConnIdx	=	pstInst->iIdx;
+
+	stFrameHead.stCmdData.stRelay.stOld.iConnIdx	=	pstInstOld->iIdx;
+	stFrameHead.stCmdData.stRelay.stOld.iID		=	pstInstOld->iID;
+
+	stFrameHead.stCmdData.stRelay.stNew.iConnIdx	=	pstInst->iIdx;
+	stFrameHead.stCmdData.stRelay.stNew.iID		=	pstInstOld->iID;
+
+	stFrameHead.chExtraType=	TFRAMEHEAD_EXTRA_IP;
+	pstIPInfo	=	&stFrameHead.stExtraInfo.stIPInfo;
+
+	pstIPInfo->nFamily	=	pstInst->stAddr.sa_family;
+
+	if( AF_INET==pstInst->stAddr.sa_family )
+	{
+		pstIPInfo->wPort=	((struct sockaddr_in*)(&pstInst->stAddr))->sin_port;
+		pstIPInfo->ulIp	=	((struct sockaddr_in*)(&pstInst->stAddr))->sin_addr.s_addr;
+	}
+	else
+	{
+		pstIPInfo->wPort=	0;
+		pstIPInfo->ulIp	=	0;
+	}
+
+	if( pstInst->iUseTimeStamp )
+	{
+		stFrameHead.chTimeStampType	=	TFRAMEHEAD_TIMESTAMP_TIMEVAL;
+
+		gettimeofday(&stCurr, NULL);
+			
+		stFrameHead.stTimeStamp.stTimeVal.iSec	=	(int)stCurr.tv_sec;
+		stFrameHead.stTimeStamp.stTimeVal.iUsec	=	(int)stCurr.tv_usec;
+	}
+	else
+	{
+		stFrameHead.chTimeStampType	=	0;
+	}
+
+	stFrame.pszBuff	=	szFrameBuff;
+	stFrame.iBuff	=	(int)sizeof(szFrameBuff);
+
+	stMsg.pszBuff	=	NULL;
+	stMsg.iBuff	=	0;
+
+	if( tconnd_make_frame(&stFrame, &stMsg, &stFrameHead)<0 )
+	{
+              tlog_error(pstThread->pstLog, 0, 0,"tconnd_make_frame failed\n");
+		return -1;
+	}
+
+	if( tconnd_sendto_serinst(pstThread, pstInst, &stFrame)<0 )
+	{
+              tlog_error(pstThread->pstLog, 0, 0,"tconnd_sendto_serinst failed\n");
+		return -1;
+	}
+
+	if( pstInst->iSendFirstFrame )
+	{
+		pstInst->fWaitFirstPkg	=	0;
+		tconnd_safe_close(pstThread, pstInstOld->iIdx, TFRAMEHEAD_REASON_TRANS_LOST, 0);
+
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+}*/
+
+int tconnd_do_relay(TPDUHEAD* pstHead, TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+       PDULENQQPARSER  * pstQQParser = NULL;
+	PDULENQQPARSERINST  *pstQQParserInst = NULL;
+       TPDUEXTRELAY       *pstPDURelay = NULL;
+	TQQUSERIDENT        stUserIdent;
+	TQQUSERIDENT        stTempUserIdent;
+	TCONNINST             *pstInstOld = NULL;
+	char                        *pszDec = NULL;
+	int                           iDec=0;
+	TDRDATA                 stHost;
+	TDRDATA                 stNet;
+
+	if( pstHead->stBase.bCmd != TPDU_CMD_RELAY)
+	{
+             return -1;
+	}
+	
+
+	pstPDURelay = &pstHead->stExt.stRelay;
+	if( pstPDURelay->iOldPos == -1 )
+	{
+              tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_relay:old pos invalid,oldpos = %d\n",pstPDURelay->iOldPos);      
+		return -1;     
+	}
+
+       pstInstOld	=	tconnd_get_inst(pstThread->pstPool, pstPDURelay->iOldPos);
+	if(!pstInstOld )
+	{
+              tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_relay:old instance does not exsit,oldpos = %d\n",pstPDURelay->iOldPos); 
+		return -1;
+
+	}
+	
+       pszDec = (char *)&stTempUserIdent;
+	iDec  = (int)sizeof(stTempUserIdent);
+
+	if(!oi_symmetry_decrypt2((char*)pstPDURelay->szEncryptIdent,pstPDURelay->iLen, pstInstOld->szEncKey, pszDec, &iDec) )
+	{
+            tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_relay:decrypt relay info failed,oldpos = %d\n",pstPDURelay->iOldPos);      
+            return -1;
+	}
+
+	stNet.pszBuff   = pszDec;
+	stNet.iBuff       = iDec;
+	stHost.pszBuff = (char *)&stUserIdent;
+	stHost.iBuff     = (int )sizeof(stUserIdent);
+  
+       pstQQParser = &pstThread->pstPDUInst->pstPDU->stLenParser.stQQParser;
+	pstQQParserInst = &pstThread->pstPDUInst->stLenParser.stQQParser;
+	if( tdr_ntoh( pstQQParserInst->pstMetaUserIdent,&stHost,&stNet,TPDU_VERSION) < 0 )
+       {
+            tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_relay:tdr_ntoh User Identity failed,oldpos = %d\n",pstPDURelay->iOldPos);      
+            return -1;
+
+	}
+
+	//check relay info
+       if(  stUserIdent.lUin!=pstInstOld->stAuthData.stAuthQQUnified.lUin)
+       {
+            tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_relay:uin do not match,uin = %d,Origin uin =%d\n",stUserIdent.lUin,pstInstOld->stAuthData.stAuthQQUnified.lUin); 
+	     return -1;
+       }
+	if( stUserIdent.iPos != pstPDURelay->iOldPos)
+	{
+            tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_relay:pos do not match,pos = %d,encpos =%d\n",pstPDURelay->iOldPos,stUserIdent.iPos);
+	     return -1;
+	}
+       if( memcmp(stUserIdent.szIdent, pstInstOld->szIdent, sizeof(pstInstOld->szIdent) ) )
+      	{
+            tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_relay:Identity info donot match",pstPDURelay->iOldPos); 
+	     return -1;
+	 }
+
+	//save connection info from old connection
+	pstInst->iRelayFlag = 1;
+	pstInst->iRelayType=pstPDURelay->iRelayType;
+	pstInst->iOldID = pstInstOld->iID;
+	pstInst->iOldIdx = pstInstOld->iIdx;
+	pstInst->stAuthData.stAuthQQUnified.lUin = stUserIdent.lUin;
+	pstInst->iEncKeyLen = pstInstOld->iEncKeyLen;
+	memcpy(pstInst->szEncKey, pstInstOld->szEncKey, sizeof(pstInst->szEncKey));
+	pstInst->iEncMethod	=	pstQQParser->iEncMethod;	
+	
+       tconnd_safe_close(pstThread, pstInstOld->iIdx, TFRAMEHEAD_REASON_TRANS_LOST, 0);
+       	
+	return 0;
+	 
+}
+
+int tconnd_do_auth_by_QQV2(TPDUHEAD* pstHead, TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+
+	TQQGAMESIG stGameSig;
+	TQQSIGFORS2 stSigForS2;
+	TQQAUTHINFO* pstAuthInfo;
+	TQQAUTHINFO stTempAuth;
+	TDRDATA stHost;
+	TDRDATA stNet;
+	PDULENQQPARSER* pstQQParser;
+	PDULENQQPARSERINST* pstQQParserInst;
+	unsigned long ulCltIP;
+	long uin;
+	char* pszDec;
+	int iDec;
+	int iRet=0;
+
+	pstAuthInfo = &pstHead->stExt.stAuthInfo.stAuthData.stAuthQQV2;
+       pstQQParserInst	=	&pstThread->pstPDUInst->stLenParser.stQQParser;
+	pstQQParser	=	&pstThread->pstPDUInst->pstPDU->stLenParser.stQQParser;
+
+	uin = pstAuthInfo->lUin;
+
+	pszDec   = (char *)stTempAuth.szSignData;
+	iDec       = sizeof(stTempAuth.szSignData);
+
+	if( !oi_symmetry_decrypt2((char*)pstAuthInfo->szSignData, pstAuthInfo->bSignLen, pstQQParser->szSvrSKey, pszDec, &iDec) )
+	{
+            //check  whether uin  is  a test num
+             if( ( pstQQParser->iTestNumEnable == 0) || (uin < pstQQParser->iTestBeginNum) ||(uin > pstQQParser->iTestEndNum) )
+	      {
+                   tlog_error(pstThread->pstLog, 0, 0,"decrypt First Sig Failed!uin =%d\n",uin);
+                   return -1;
+	      }
+
+	      //****************decryption First sig for Test QQ Num 
+	      tlog_debug(pstThread->pstLog, 0, 0,"uin is a test num,uin =%d,testbeginnum=%d,testendnum=%d\n",uin,pstQQParser->iTestBeginNum,pstQQParser->iTestEndNum);
+	      pszDec   = (char *)stTempAuth.szSignData;
+	      iDec       = sizeof(stTempAuth.szSignData);  
+             if(! oi_symmetry_decrypt2((char*)pstAuthInfo->szSignData, pstAuthInfo->bSignLen, pstQQParser->szTestSvrSKey, pszDec, &iDec) )
+             {
+                   tlog_error(pstThread->pstLog, 0, 0,"Decrypt test Num First Sig Failed!uin =%d\n",uin);
+		     return -1;
+	      }
+      }			 
+
+      stHost.pszBuff	=	(char*) &stGameSig;
+      stHost.iBuff	=	(int) sizeof(stGameSig);
+      stNet.pszBuff	=	pszDec;
+      stNet.iBuff	       =	iDec;
+      iRet=tdr_ntoh(pstQQParserInst->pstMetaGameSig, &stHost, &stNet, TPDU_VERSION);
+
+       if(iRet<0 )
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQV2:GameSig tdr_ntoh failed! uin = %d,iRet=%d,errorstring=%s\n",uin,iRet,tdr_error_string(iRet));
+	      return iRet;
+	}
+
+       if(uin != stGameSig.lUin)
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"uin = %d not correct in GameSig \n",uin);
+	      return -1;
+	}
+
+	if( (int)pstInst->tCreate - (int)stGameSig.ulTime > pstQQParser->iSigValidSec )
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"sigvalidsec exceeds configuration,uin =%d\n",uin);
+	      return -1;
+	}
+
+	if( pstQQParser->iCheckSig2 == 1)
+	{
+             pszDec	=	(char*)stTempAuth.szSign2Data;
+             iDec	=	(int)sizeof(stTempAuth.szSign2Data);
+	      if( !oi_symmetry_decrypt2((char*)pstAuthInfo->szSign2Data, pstAuthInfo->bSign2Len, pstQQParser->szSvrSKey2, pszDec, &iDec) )
+	      {
+                  //check  whether uin  is  a test num
+                  if( ( pstQQParser->iTestNumEnable == 0) || (uin < pstQQParser->iTestBeginNum) ||(uin > pstQQParser->iTestEndNum) )
+	           {
+                       tlog_error(pstThread->pstLog, 0, 0,"decrypt second Sig Failed!uin =%d\n",uin);
+                       return -1;
+	           }
+
+	           //****************decryption Second sig for Test QQ Num 
+	           pszDec	=	(char*)stTempAuth.szSign2Data;
+                  iDec	=	(int)sizeof(stTempAuth.szSign2Data);
+                  if(! oi_symmetry_decrypt2((char*)pstAuthInfo->szSign2Data, pstAuthInfo->bSign2Len, pstQQParser->szTestSvrSKey2, pszDec, &iDec) )
+                  {
+                       tlog_error(pstThread->pstLog, 0, 0,"Decrypt test Num second Sig Failed!uin =%d\n",uin);
+		         return -1;
+	           }
+	      }
+
+	    //check sig2
+	    stHost.pszBuff	=	(char*) &stSigForS2;
+	    stHost.iBuff	=	(int) sizeof(stSigForS2);
+
+	    stNet.pszBuff	=	pszDec;
+	    stNet.iBuff	=	iDec;
+
+	    iRet= tdr_ntoh(pstQQParserInst->pstMetaSigForS2, &stHost, &stNet, TPDU_VERSION);
+
+	    if( iRet<0 )
+	    {
+                 tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQV2:tdr_ntoh SigforS2 failed!uin =%d,iRet=%d,errorstring=%s\n",uin,iRet,tdr_error_string(iRet));
+	 	   return iRet;
+	    }
+
+	    if( stGameSig.lUin!=stSigForS2.lUin )
+	    {
+		   tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth:Uin do not match between GameSig and SigforS2!uin =%d\n",uin);
+		   return -1;
+	    }
+
+	   ulCltIP		=	((struct sockaddr_in*)&pstInst->stAddr)->sin_addr.s_addr;
+
+	   if( pstQQParser->iCheckCltIP && ulCltIP!=stSigForS2.ulCltIP )
+	   {
+		   tlog_error(pstThread->pstLog, 0, 0,"client ip <%u> diff from the ip(%u) in sigForS2!uin = %d\n",uin,ulCltIP, stSigForS2.ulCltIP );
+		   return -1;
+	   }
+	      
+      }
+	     	
+	//save connection info
+	pstInst->iEncKeyLen	=	(int)sizeof(stGameSig.szGameKey);
+
+	pstInst->stAuthData.stAuthQQV2.lUin	=	pstHead->stExt.stAuthInfo.stAuthData.stAuthQQV2.lUin;
+	memcpy(pstInst->szEncKey, stGameSig.szGameKey, sizeof(stGameSig.szGameKey));
+
+	tlog_debug(pstThread->pstLog, 0, 0,"Auth Sig QQV2 Success for Uin = %d \n",uin);
+	return 0;
+
+}
+	
+
+
+int  tconnd_do_auth_by_QQUnified(TPDUHEAD* pstHead, TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+	TQQUNIFIEDAUTHINFO    *pstUniAuthInfo = NULL;
+	TQQUNIFIEDSIG              stUniSig;
+       TQQUNIFIEDENCRYSIG    stEncrySig;
+	TQQUNIFIEDSIG              stTempSig;
+	TDRDATA                        stHost;
+	TDRDATA                        stNet;
+	PDULENQQPARSER         *pstQQParser = NULL;
+	PDULENQQPARSERINST  *pstQQParserInst = NULL;
+	unsigned long ulCltIP;
+	long               uin;
+	char             *pszDec;
+	int                 iDec;
+       int                iRet =0;
+	//
+	char     hex[500];
+	int        hexlen = sizeof(hex);
+
+       pstUniAuthInfo = &pstHead->stExt.stAuthInfo.stAuthData.stAuthQQUnified;
+       pstQQParserInst	=	&pstThread->pstPDUInst->stLenParser.stQQParser;
+	pstQQParser	=	&pstThread->pstPDUInst->pstPDU->stLenParser.stQQParser;
+
+	uin = pstUniAuthInfo->lUin;
+
+
+	stNet.pszBuff   = pstUniAuthInfo->szSigInfo;
+	stNet.iBuff       = pstUniAuthInfo->bLen;
+	stHost.pszBuff  = (char *) &stUniSig;
+	stHost.iBuff     = sizeof(stUniSig);
+	
+      iRet= tdr_ntoh( pstQQParserInst->pstMetaUniSig, &stHost, &stNet, TPDU_VERSION );
+	if(  iRet< 0 )
+	{
+            tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQUnified:tdr_ntoh SigInfo failed!iRet=%d,errorsting=%s\n",iRet,tdr_error_string(iRet));
+	     return iRet;
+	}
+	
+	
+	if( stUniSig.nVersion!= 1)
+	{
+            tlog_debug(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQUnified:version not conrrect :Uin = %d,version = %d\n",uin,stUniSig.nVersion);
+            return -1;
+	}
+
+	if( (int)pstInst->tCreate - stUniSig.iTime> pstQQParser->iSigValidSec )
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"sigvalidsec exceeds configuration,uin =%d\n",uin);
+	      return -1;
+	}
+	
+
+	pszDec = (char *)stTempSig.szEncryptSignData;
+	iDec  = sizeof(stTempSig.szEncryptSignData);
+
+	//for debug
+	tlog_debug(pstThread->pstLog, 0, 0,"SIg len =%d\n",stUniSig.nEncryptSignLen);
+	tlog_debug(pstThread->pstLog, 0, 0,"SIg Info =%s\n",Bin2Hex(stUniSig.szEncryptSignData, stUniSig.nEncryptSignLen, hex, &hexlen));
+	tlog_debug(pstThread->pstLog, 0, 0,"svr key =%s\n",pstQQParser->szSvrSKey);
+	
+
+	if( ! oi_symmetry_decrypt2((char*)stUniSig.szEncryptSignData, stUniSig.nEncryptSignLen, pstQQParser->szSvrSKey, pszDec, &iDec)  )
+	{
+             //check  whether uin  is  a test num
+             if( ( pstQQParser->iTestNumEnable == 0) || (uin < pstQQParser->iTestBeginNum) ||(uin > pstQQParser->iTestEndNum) )
+	      {
+                   tlog_error(pstThread->pstLog, 0, 0,"decrypt Unified Sig Failed!uin =%d\n",uin);
+                   return -1;
+	      }
+
+	      //****************decryption Unified sig for Test QQ Num 
+	      tlog_debug(pstThread->pstLog, 0, 0,"uin is a test num,uin =%d,testbeginnum=%d,testendnum=%d\n",uin,pstQQParser->iTestBeginNum,pstQQParser->iTestEndNum);
+	      pszDec = (char *)stTempSig.szEncryptSignData;
+	      iDec  = sizeof(stTempSig.szEncryptSignData);  
+             if(! oi_symmetry_decrypt2((char*)stUniSig.szEncryptSignData, stUniSig.nEncryptSignLen, pstQQParser->szTestSvrSKey, pszDec, &iDec) )
+             {
+                   tlog_error(pstThread->pstLog, 0, 0,"Decrypt test Num Unified Sig Failed!uin =%d\n",uin);
+		     return -1;
+	      }
+
+	}
+
+	stNet.iBuff      = iDec;
+	stNet.pszBuff  = pszDec;
+	stHost.iBuff     = (int)sizeof(stEncrySig);
+	stHost.pszBuff = (char *)&stEncrySig;
+
+	tlog_debug(pstThread->pstLog, 0, 0,"net len=%d:net Info =%s\n",stNet.iBuff,Bin2Hex(stNet.pszBuff, stNet.iBuff, hex, &hexlen));
+	
+       iRet = tdr_ntoh( pstQQParserInst->pstMetaUniEncSig, &stHost, &stNet, TPDU_VERSION );
+	if( iRet < 0 )
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQUnified:tdr_ntoh EncSig Failed!uin =%d,errorstring=%s\n",uin,tdr_error_string(iRet));
+             return iRet;
+	}
+
+	if( stEncrySig.nVersion!= stUniSig.nVersion)
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQUnified:version donot match in Sig!uin =%d\n",uin);
+             return -1;
+	}
+
+	if( stEncrySig.dwUin!= uin)
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQUnified:uin donot match in Sig!uin =%d\n",uin);
+             return -1;
+	}
+
+	if( stEncrySig.iTime!= stUniSig.iTime)
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"tconnd_do_auth_by_QQUnified:time donot match in Sig!uin =%d\n",uin);
+             return -1;
+	}
+
+	 ulCltIP		=	((struct sockaddr_in*)&pstInst->stAddr)->sin_addr.s_addr;
+
+	 if( pstQQParser->iCheckCltIP && ulCltIP!=stEncrySig.iClientIP)
+	 {
+	      tlog_error(pstThread->pstLog, 0, 0,"client ip <%u> diff from the ip(%u) in sig!uin = %d\n",ulCltIP, stEncrySig.iClientIP,uin );
+	      return -1;
+	 }
+
+	 if( pstQQParser->iCheckSig2 == 1  )
+	 {
+             pszDec = (char *)stTempSig.szEncryptSignData;
+	      iDec  = sizeof(stTempSig.szEncryptSignData);
+
+	      if( ! oi_symmetry_decrypt2((char*)stEncrySig.szUnifiedSig2, stEncrySig.nUnifiedSig2Len, pstQQParser->szSvrSKey2, pszDec, &iDec)  )
+	      {
+                    //check  whether uin  is  a test num
+                   if( ( pstQQParser->iTestNumEnable == 0) || (uin < pstQQParser->iTestBeginNum) ||(uin > pstQQParser->iTestEndNum) )
+	            {
+                        tlog_error(pstThread->pstLog, 0, 0,"decrypt Unified Sig2 Failed!uin =%d\n",uin);
+                        return -1;
+	            }
+
+	          //****************decryption Unified sig2 for Test QQ Num 
+	           pszDec = (char *)stTempSig.szEncryptSignData;
+	           iDec  = sizeof(stTempSig.szEncryptSignData);
+                  if(! oi_symmetry_decrypt2((char*)stEncrySig.szUnifiedSig2, stEncrySig.nUnifiedSig2Len, pstQQParser->szTestSvrSKey2, pszDec, &iDec) )
+                  {
+                       tlog_error(pstThread->pstLog, 0, 0,"Decrypt test Num Unified Sig Failed!uin =%d\n",uin);
+		         return -1;
+	           }
+	      }
+	 }
+
+	//save connection info
+	pstInst->iEncKeyLen	=	(int)sizeof(stEncrySig.szSessionKey);
+
+	memcpy(pstInst->szEncKey, stEncrySig.szSessionKey, sizeof(stEncrySig.szSessionKey));
+	
+	pstInst->stAuthData.stAuthQQUnified.lUin	=  uin;
+
+	tlog_debug(pstThread->pstLog, 0, 0,"Auth Sig QQUnified Success for Uin = %d,Sessionkey =%s \n",uin,pstInst->szEncKey);
+	return 0; 
+	
+}
+
+int tconnd_do_auth(TPDUHEAD* pstHead, TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+     PDULENQQPARSER* pstQQParser=NULL;
+     TPDUEXTAUTHINFO* pstPDUAuth=NULL;
+     int  iRet = 0;
+
+   	 
+     pstPDUAuth	=	&pstHead->stExt.stAuthInfo;
+     pstQQParser	=	&pstThread->pstPDUInst->pstPDU->stLenParser.stQQParser;
+
+	 
+     pstInst->iEncMethod	=	pstQQParser->iEncMethod;	 
+     pstInst->iAuthType	=	pstQQParser->iAuthType;
+	 
+
+     if( TPDU_CMD_AUTH!=pstHead->stBase.bCmd )
+     {
+		return -1;
+     }
+
+     if( pstHead->stExt.stAuthInfo.iAuthType!=pstQQParser->iAuthType )
+     {
+              tlog_error(pstThread->pstLog, 0, 0,"AuthType do not match configuration NetAuth =%d,LocalAuth =%d\n",pstHead->stExt.stAuthInfo.iAuthType,pstQQParser->iAuthType);
+		return -1;
+     }
+
+     switch( pstQQParser->iAuthType )
+     {
+          case TSEC_AUTH_NONE:	
+			tlog_debug(pstThread->pstLog, 0, 0,"AuthType  is None,forbidden \n");
+			return -1;
+	   case TSEC_AUTH_QQV1:
+	   case TSEC_AUTH_QQV2:
+	   	       iRet = tconnd_do_auth_by_QQV2(pstHead,  pstThread, pstInst);
+			 if(iRet!=0)
+	   	       {
+                           tlog_error(pstThread->pstLog, 0, 0,"tconnd Auth QQV2 Sig failed!");
+			      return iRet;
+			}
+	   	       break;
+	   case  TSEC_AUTH_QQUNIFIED:
+	   	       iRet = tconnd_do_auth_by_QQUnified(pstHead,pstThread,pstInst);
+	   	       if(iRet!=0)
+	   	       {
+                           tlog_error(pstThread->pstLog, 0, 0,"tconnd Auth QQUnified Sig failed!");
+			      return iRet;
+			}
+			break;
+           default:
+		   	tlog_error(pstThread->pstLog, 0, 0,"AuthType uncorrect:%d\n",pstQQParser->iAuthType );
+		   	return -1;
+     }
+
+    //check whether uin is VIP number
+   int i=0;
+    for(i=0;i<pstQQParser->nVIPNum;i++)
+    {
+         if( pstInst->stAuthData.stAuthQQUnified.lUin == pstQQParser->vIPUins[i])
+         {
+             pstInst->iVIPFlag=1;
+	      tlog_debug(pstThread->pstLog, 0, 0,"QQ Number=%d is VIP Number!",pstInst->stAuthData.stAuthQQUnified.lUin);
+             break;  
+	  }
+    }
+
+    //send syn msg to client
+    iRet=tconnd_notify_lisinst_syn(pstThread, pstInst);
+    if( iRet!=0 )
+    {
+	  return iRet;
+    }
+
+    return 0;
+}
+
+/*return 0    = process success*/
+/*return <0  = process fail*/
+/*return >0  =Instance is in queue wait to process*/ 
+
+int tconnd_pkg2msg(TDRDATA* pstMsg, TDRDATA* pstPkg, TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+	TPDUHEAD stHead;
+	TDRDATA stHost;
+	TDRDATA stNet;
+	PDUINST* pstPDUInst;
+	PDULENQQPARSER* pstQQParser;
+	PDULENQQPARSERINST* pstQQParserInst;
+	char* pszEnc;
+	int iEnc;
+	int iRet=0;
+
+	pstPDUInst	=	pstThread->pstPDUInst;
+
+	if( PDULENPARSERID_BY_QQ!=pstPDUInst->iLenParsertype )
+	{
+		if( !pstInst->iAuthPass )
+		{
+			pstInst->iAuthPass	=	1;
+			return 0;
+		}
+
+		if( pstInst->iIsInQueue )
+		{
+                     tlog_debug(pstThread->pstLog, 0, 0,"client %s is in queue, process recv data after queue up \n",
+				inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr));
+			return 1;
+		}
+		else
+		{
+			pstMsg->pszBuff	=	pstPkg->pszBuff;
+			pstMsg->iBuff	=	pstPkg->iBuff;
+			return 0;
+		}
+	}
+
+	pstQQParser	=	&pstPDUInst->pstPDU->stLenParser.stQQParser;
+	pstQQParserInst	=	&pstPDUInst->stLenParser.stQQParser;
+
+
+	stHost.pszBuff	=	(char*)&stHead;
+	stHost.iBuff	=	(int)sizeof(stHead);
+
+	stNet.pszBuff	=	pstPkg->pszBuff;
+	stNet.iBuff	=	pstPkg->iBuff;
+	iRet=tdr_ntoh(pstQQParserInst->pstMetaHead, &stHost, &stNet, TPDU_VERSION);
+
+	if( iRet<0 )
+	{
+              tlog_error(pstThread->pstLog, 0, 0,"tdr_ntoh QQ metahead failed,iRet=%d,error=%s \n",iRet,tdr_error_string(iRet));
+		return iRet;
+	}
+
+	if( !pstInst->iAuthPass )
+	{
+
+	       switch( stHead.stBase.bCmd)
+	       {
+                   case TPDU_CMD_AUTH:
+				if( 1==pstInst->iSynSent )
+				{
+                                pstInst->iSynSent=0;
+				}
+				iRet=tconnd_do_auth(&stHead, pstThread, pstInst);
+				if( iRet!=0 )
+				{
+                                 tlog_error(pstThread->pstLog, 0, 0,"tconnd Process Auth Msg failed\n");
+				     return iRet;
+				}
+				pstInst->iSynSent=1;
+				return 0;
+		     case TPDU_CMD_SYNACK:
+			 	if(pstInst->iSynSent!=1)
+			 	{
+                                 tlog_error(pstThread->pstLog, 0, 0,"tconnd Process SynAck Msg failed,have to send Auth Msg first\n");
+				     pstInst->iSynSent=0;
+				     return -1;
+				}
+				iRet=tconnd_do_synack(&stHead, pstThread, pstInst);
+				if(iRet!=0)
+				{
+                                 tlog_error(pstThread->pstLog, 0, 0,"tconnd Process SynAck Msg failed\n");
+				     return -1;
+				}
+				//Auth success
+				tlog_debug(pstThread->pstLog, 0, 0,"tconnd  Auth SynAck Msg Sucess!conection pass! uin=%d \n",pstInst->stAuthData.stAuthQQUnified.lUin);
+				pstInst->iAuthPass=1;
+			 	return 0;
+		     case TPDU_CMD_RELAY:
+			 	iRet=tconnd_do_relay(&stHead, pstThread, pstInst );
+				if(iRet!=0)
+				{
+                                 tlog_error(pstThread->pstLog, 0, 0,"tconnd Auth relay failed\n");
+				     return iRet;
+				}
+				//Auth relay success
+				tlog_debug(pstThread->pstLog, 0, 0,"tconnd Auth relay Sucess! uin=%d:RelayType=%d\n",pstInst->stAuthData.stAuthQQUnified.lUin,pstInst->iRelayType);
+				pstInst->iAuthPass=1;
+			 	return 0;
+		     default:
+			 	tlog_error(pstThread->pstLog, 0, 0,"Auth connection failed:CMDiD=%d \n",stHead.stBase.bCmd );
+				return -1;
+
+
+		}
+	}
+
+	if( pstInst->iIsInQueue )
+	{
+		tlog_debug(pstThread->pstLog, 0, 0,"client %s is in queue, process recv data after queue up \n",
+				inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr));
+		return 1;
+	}
+
+	pszEnc		=	pstPkg->pszBuff + stNet.iBuff;
+	iEnc		=	pstPkg->iBuff - stNet.iBuff;
+	
+
+	if( TSEC_ENC_QQ!=pstInst->iEncMethod )
+	{
+              pstInst->iNeedFree	=	TFRAMEHEAD_REASON_ENC_NOSUP;
+		pstInst->iNotify	=	0;
+		tlog_error(pstThread->pstLog, 0, 0,"EncMethod=%d uncorrent \n",pstInst->iEncMethod);
+		return -1;
+	}
+
+	if( iEnc )
+	{
+		if( !oi_symmetry_decrypt2(pszEnc, iEnc, pstInst->szEncKey, pstMsg->pszBuff, &pstMsg->iBuff) )
+		{
+                     tlog_error(pstThread->pstLog, 0, 0,"decrypt logic msg failed, msg len(%d) \n", iEnc);
+			return -1;
+		}
+	}
+	else
+	{
+		pstMsg->iBuff	=	0;
+	}
+
+	return 0;
+}
+
+
+int tconnd_msg2frame(TDRDATA* pstFrame, TDRDATA* pstMsg, TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+	struct timeval stCurr;
+	TFRAMEHEAD stHead;
+	TIPINFO* pstIPInfo;
+	int iRet=0;
+
+	/* do process the msg. */
+
+	memset(&stHead, 0, sizeof(stHead) );
+
+	stHead.chVer	=	0;
+
+	stHead.iID	=	pstInst->iID;
+	stHead.iConnIdx	=	pstInst->iIdx;
+
+	if( pstInst->fWaitFirstPkg )
+	{
+		pstInst->fWaitFirstPkg	=	0;
+		
+              stHead.chVer	=	0;
+		stHead.chExtraType=	TFRAMEHEAD_EXTRA_IP;
+		pstIPInfo	=	&stHead.stExtraInfo.stIPInfo;
+
+		pstIPInfo->nFamily	=	pstInst->stAddr.sa_family;
+		if( AF_INET==pstInst->stAddr.sa_family )
+		{
+			pstIPInfo->wPort=	((struct sockaddr_in*)(&pstInst->stAddr))->sin_port;
+			pstIPInfo->ulIp	=	((struct sockaddr_in*)(&pstInst->stAddr))->sin_addr.s_addr;
+		}
+		else
+		{
+			pstIPInfo->wPort=	0;
+			pstIPInfo->ulIp	=	0;
+		}
+
+	       
+		if( pstInst->iRelayFlag )
+		{
+                      //Relay Msg
+                       stHead.chCmd	=	TFRAMEHEAD_CMD_RELAY;
+			 stHead.stCmdData.stRelay.lUin = pstInst->stAuthData.stAuthQQUnified.lUin;
+			 stHead.stCmdData.stRelay.iRelayType=pstInst->iRelayType;
+		        stHead.stCmdData.stRelay.stOld.iConnIdx	=	pstInst->iOldIdx;
+                      stHead.stCmdData.stRelay.stOld.iID		       =	pstInst->iOldID;
+              	 stHead.stCmdData.stRelay.stNew.iConnIdx	=	pstInst->iIdx;
+	               stHead.stCmdData.stRelay.stNew.iID		=	pstInst->iID;
+
+		}
+		else 
+		{      
+		        //Auth Msg
+		        stHead.chCmd	=	TFRAMEHEAD_CMD_START;
+                      stHead.stCmdData.stStart.iAuthType	    =	pstInst->iAuthType;   
+		        stHead.stCmdData.stStart.stAuthData.stAuthQQUnified.lUin = pstInst->stAuthData.stAuthQQUnified.lUin;
+		}
+	}
+	else
+	{
+		stHead.chCmd	=	TFRAMEHEAD_CMD_INPROC;
+
+		if( -1==stHead.iID || !pstInst->fStream )
+		{
+			stHead.chExtraType=	TFRAMEHEAD_EXTRA_IP;
+
+			pstIPInfo	=	&stHead.stExtraInfo.stIPInfo;
+			pstIPInfo->nFamily	=	pstInst->stAddr.sa_family;
+
+			if( AF_INET==pstInst->stAddr.sa_family )
+			{
+				pstIPInfo->wPort=	((struct sockaddr_in*)(&pstInst->stAddr))->sin_port;
+				pstIPInfo->ulIp	=	((struct sockaddr_in*)(&pstInst->stAddr))->sin_addr.s_addr;
+			}
+			else
+			{
+				pstIPInfo->wPort=	0;
+				pstIPInfo->ulIp	=	0;
+			}
+		}
+		else
+		{
+			stHead.chExtraType=	0;
+		}
+	}
+
+	if( pstInst->iUseTimeStamp )
+	{
+		stHead.chTimeStampType	=	TFRAMEHEAD_TIMESTAMP_TIMEVAL;
+
+		gettimeofday(&stCurr, NULL);
+			
+		stHead.stTimeStamp.stTimeVal.iSec	=	(int)stCurr.tv_sec;
+		stHead.stTimeStamp.stTimeVal.iUsec	=	(int)stCurr.tv_usec;
+	}
+	else
+	{
+		stHead.chTimeStampType	=	0;
+	}
+       iRet = tconnd_make_frame(pstFrame, pstMsg, &stHead);
+	if(iRet)
+	{
+             tlog_error(pstThread->pstLog, 0, 0,"tconnd_make_frame failed\n");
+	      return -1;
+	}
+	return 0;
+}
+
+int tconnd_recv_pkg(TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+	int iCount;
+	TCONND* pstConnd;
+	CONFINST* pstConfInst;
+	TCONNDRUN_CUMULATE* pstRunCum;
+	NETTRANS* pstNetTrans;
+	TRANSINST* pstTransInst;
+	LISTENERRUN* pstLisRun;
+	int iRet = 0;
+	TDRDATA stPkg;
+	TDRDATA stMsg;
+	TDRDATA stFrame;
+	PFNTCONND_GET_PKGLEN pfnGetPkgLen;
+
+	iCount	=	0;
+
+	pstTransInst	= pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+	pstThread->pstPDUInst	= pstThread->pstConfInst->stPDUInstList.astInsts + pstTransInst->iPDULoc;
+
+	pfnGetPkgLen 	= pstThread->pstPDUInst->pfnGetPkgLen;
+	assert(NULL != pfnGetPkgLen);
+
+	if( !pstInst->iPkgLen )
+	{
+		iRet = (*pfnGetPkgLen)(pstInst, pstThread);
+	}
+
+	if( 0 != iRet)
+	{
+		return iRet;
+	}
+
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+	pstConfInst	=	pstThread->pstConfInst;
+	pstRunCum		=	(TCONNDRUN_CUMULATE *) pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+
+	pstNetTrans	= 	pstConnd->stNetTransList.astNetTrans + pstInst->iTransLoc;
+
+	while( pstInst->iData >= pstInst->iPkgLen )
+	{
+		stPkg.pszBuff	=	pstInst->szBuff + pstInst->iOff;
+		stPkg.iBuff	=	pstInst->iPkgLen;
+
+		stMsg.pszBuff	=	pstThread->pszMsgBuff;
+		stMsg.iBuff	=	pstThread->iMsgBuff;
+
+		stFrame.pszBuff	=	pstThread->pszRecvBuff;
+		stFrame.iBuff	=	pstThread->iRecvBuff;
+
+		iRet		=	0;
+		iCount++;
+
+		if( !pstInst->iAuthPass )
+		{
+			tconnd_pkg2msg(&stMsg, &stPkg, pstThread, pstInst);
+
+			//wait for synack msg
+			if( (!pstInst->iAuthPass)&&(pstInst->iSynSent) )
+			{
+                           pstInst->iData	-=	pstInst->iPkgLen;
+		             pstInst->iOff	+=	pstInst->iPkgLen;
+		             pstInst->iPkgLen	=	0;     
+			      break;
+			}
+			
+			//create connection fail,close
+			if( !pstInst->iAuthPass )
+			{
+                            pstInst->iNeedFree	=	TFRAMEHEAD_REASON_AUTH_FAIL;
+             			pstInst->iNotify	=	0;
+				tlog_error(pstThread->pstLog, 0, 0," auth failed!, close connection:ip =%s,Port =%d\n",
+					inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),NTOHS(((struct sockaddr_in*)(&pstInst->stAddr))->sin_port));
+				break;
+			}
+	
+                     //must be relay connection or VIP number,send msg to svr directly need not to be through queue,
+			if( pstInst->iRelayFlag ||pstInst->iVIPFlag) 
+			{
+			    pstTransInst->stConnInfo.iIdle--;
+			    pstTransInst->stConnInfo.iActive++;
+          iRet = tconnd_pkg2msg(&stMsg, &stPkg,pstThread,pstInst);
+			    if( 0!= iRet )
+					{
+								tlog_error(pstThread->pstLog, 0, 0," tconnd_pkg2msg failed!iRet =%d\n",iRet);
+					}
+					else
+					{
+							  iRet = tconnd_msg2frame(&stFrame, &stMsg, pstThread, pstInst);
+								if(  0 != iRet )
+								{
+									 tlog_error(pstThread->pstLog, 0, 0," tconnd_msg2frame failed in make relay info:ip =%s,Port =%d\n",
+										inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),NTOHS(((struct sockaddr_in*)(&pstInst->stAddr))->sin_port));
+								}
+					}    
+			}
+			else
+			{
+				tlog_debug(pstThread->pstLog, 0, 0,"push client to queue,IP = %s,Port=%d\n",
+					inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),NTOHS(((struct sockaddr_in*)(&pstInst->stAddr))->sin_port));
+				tconnd_push_queue(pstThread, pstInst);
+				break;
+			}
+		}
+		else
+		{
+			iRet	=	tconnd_pkg2msg(&stMsg, &stPkg, pstThread, pstInst);
+			if(0 != iRet)
+			{
+                           if( iRet > 0 )
+                           {
+                                   //iRet = 1 process msg after queue up
+                                   break;
+
+			       }
+			      tlog_error(pstThread->pstLog, 0, 0,"tconnd_pkg2msg failed\n");
+
+			}
+			else
+			{
+                           iRet	=	tconnd_msg2frame(&stFrame, &stMsg, pstThread, pstInst);
+			      if( 0 != iRet)
+			      {
+                                 tlog_error(pstThread->pstLog, 0, 0,"tconnd_pkg2msg failed\n");
+
+			      }
+			}
+			   
+		}
+
+		pstLisRun	=	pstRunCum->stListenerRunList.astListeners + pstInst->iLisLoc;
+		pstLisRun->stTransStat.llRecvPkgSucc++;
+		pstLisRun->stTransStat.llRecvByteSucc	+=	stPkg.iBuff;
+
+		if( gs_tNow > pstTransInst->tLastRecvCheck + pstTransInst->iRecvCheckInterval )
+		{
+			pstTransInst->tLastRecvCheck	=	gs_tNow;
+
+			pstTransInst->iPkgMaxSpeed	=	pstNetTrans->stTransLimit.iPkgSpeed;;
+			pstTransInst->iPkgPermit	=	pstTransInst->iPkgMaxSpeed*pstTransInst->iRecvCheckInterval;
+
+			pstTransInst->iByteMaxSpeed	=	pstNetTrans->stTransLimit.iByteSpeed;
+			pstTransInst->iBytePermit	=	pstTransInst->iByteMaxSpeed*pstTransInst->iRecvCheckInterval;
+		}
+
+		if( gs_tNow > pstInst->tLastRecvMsgCheck + pstTransInst->iRecvCheckInterval )
+		{
+			pstInst->tLastRecvMsgCheck	=	gs_tNow;
+			pstInst->iRecvMsg	=	0;
+			pstInst->iRecvByte	=	0;
+		}
+		else
+		{
+			pstInst->iRecvMsg++;
+			pstInst->iRecvByte	+=	stPkg.iBuff;
+		}
+
+		if( 0==iRet )
+		{
+			if( (0==pstTransInst->iPkgPermit || pstInst->iRecvMsg <= pstTransInst->iPkgPermit) &&
+			    (0==pstTransInst->iBytePermit ||  pstInst->iRecvByte <= pstTransInst->iBytePermit) )
+			{
+				iRet	=	tconnd_sendto_serinst(pstThread, pstInst, &stFrame);
+			}
+			else
+			{
+				pstLisRun->stTransStat.llRecvPkgDrop++;
+				pstLisRun->stTransStat.llRecvByteDrop	+=	stPkg.iBuff;
+			}
+		}
+
+		pstInst->iData	-=	pstInst->iPkgLen;
+		pstInst->iOff	+=	pstInst->iPkgLen;
+		pstInst->iPkgLen	=	0;
+		//iCount++;
+
+		iRet = (*pfnGetPkgLen)(pstInst, pstThread);
+
+		if(0 != iRet)
+		{
+			break;
+		}
+
+	}/*while( pstInst->iData>=pstInst->iPkgLen )*/
+
+	if( pstInst->iOff )
+	{
+		if( pstInst->iData )
+		{
+			memmove(pstInst->szBuff, pstInst->szBuff+pstInst->iOff, pstInst->iData);
+		}
+
+		pstInst->iOff	=	0;
+	}
+
+	return iCount;
+}
+
+int tconnd_proc_recv(TCONNTHREAD* pstThread)
+{
+	int s;
+	struct sockaddr sa;
+	int iLen;
+	struct epoll_event events[MAX_EVENTS];
+	int iEvents;
+	int i;
+	TCONNPOOL* pstPool;
+	TCONND* pstConnd;
+	TCONNINST* pstInst;
+	TRANSINST* pstTransInst;
+	PDUINST* pstPDUInst;
+	LISTENER* pstListener;
+	TCONNDRUN_CUMULATE* pstRunCum;
+	CONFINST* pstConfInst;
+	NETTRANS* pstNetTrans;
+	NETTRANSRUN* pstTransRun;
+	LISTENERRUN* pstLisRun;
+	struct timeval stStart;
+	struct timeval stEnd;
+	struct timeval stSub;
+	int iRecvPackage=0;
+	int iTotalRecv=0;
+
+	
+       gettimeofday(&stStart, NULL);
+	   
+	iEvents	=	epoll_wait(pstThread->epfd, events, MAX_EVENTS, pstThread->pstAppCtx->iEpollWait);
+
+	if( iEvents<=0 )
+	{
+              if(0 != iEvents )
+              {
+                  tlog_error(pstThread->pstLog, 0, 0,"epoll_wait error errostring=%s\n", strerror(errno)); 
+		}
+		gettimeofday(&stEnd, NULL);
+       	TV_DIFF(stSub, stEnd, stStart);
+	       TV_TO_MS(pstThread->iMsRecv, stSub);	  
+		pstThread->pstAppCtx->iEpollWait = 0;
+		return -1;
+	}
+
+	pstPool		=	pstThread->pstPool;
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+	pstConfInst	=	pstThread->pstConfInst;
+	pstRunCum		=	(TCONNDRUN_CUMULATE *)pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+	for(i=0; i<iEvents; i++)
+	{
+		pstInst	=	tconnd_get_inst(pstPool, events[i].data.fd);
+
+		/* bad packet. */
+		if( !pstInst )
+		{
+			epoll_ctl(pstThread->epfd, EPOLL_CTL_DEL, (&events[i].data.fd)[1], events+i);
+			tlog_error(pstThread->pstLog, 0, 0,"pstInst not find, idx=%d\n", events[i].data.fd);
+			continue;
+		}
+
+		pstInst->tLastRecv	=	gs_tNow;
+
+		pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+
+		pstPDUInst	=	pstThread->pstConfInst->stPDUInstList.astInsts + pstTransInst->iPDULoc;
+		pstListener	=	pstConnd->stListenerList.astListeners + pstInst->iLisLoc;
+
+		pstNetTrans	=	pstConnd->stNetTransList.astNetTrans + pstInst->iTransLoc;
+
+		pstTransRun	=	pstRunCum->stNetTransRunList.astNetTrans + pstInst->iTransLoc;
+		pstLisRun	=	pstRunCum->stListenerRunList.astListeners + pstInst->iLisLoc;
+
+		if( pstInst->fListen && pstInst->fStream )
+		{
+			iLen	=	(int) sizeof(sa);
+
+			s	=	epoll_accept(pstThread->epfd, pstInst->s, events+i, &sa, &iLen);
+
+			tconnd_add_conn(pstThread, s, pstInst->iTransLoc, pstInst->iLisLoc, 0, &sa);
+		}
+		else
+		{
+			int iAddrLen;
+			iAddrLen    =   (int) sizeof(pstInst->stAddr);
+
+			if( pstInst->fStream )
+			{
+				iLen    =   epoll_recv(pstThread->epfd, pstInst->s, events+i, pstInst->szBuff+pstInst->iData, pstInst->iBuff - pstInst->iData);
+				if( iLen<=0 )
+				{		
+					if( iLen<0 )
+					{
+						pstInst->iNeedFree	=	TFRAMEHEAD_REASON_NETWORK_FAIL;
+						tlog_error(pstThread->pstLog, 0, 0, "client  %s:%d exit unnormal or connection fail !need to free!errorstring =%s\n",
+					 	                                                           inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),
+					 	                                                           NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),
+					 	                                                           strerror(errno));
+					}
+					else
+					{
+						pstInst->iNeedFree	=	TFRAMEHEAD_REASON_PEER_CLOSE;
+						tlog_debug(pstThread->pstLog, 0, 0, "tconnd recv close package from %s:%d !\n",
+					 	                                                           inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),
+					 	                                                           NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port));
+					}
+
+					epoll_ctl(pstThread->epfd, EPOLL_CTL_DEL, pstInst->s, events+i); 
+
+					pstInst->iNotify	=	1;
+					
+					continue;
+				}
+			}
+			else
+			{
+				pstInst->iData  =   0;
+				iLen    =   epoll_recvfrom(pstThread->epfd, pstInst->s, events+i, pstInst->szBuff+pstInst->iData, pstInst->iBuff - pstInst->iData, &pstInst->stAddr, &iAddrLen);
+				if( iLen<=0 ) 
+				{
+				    continue;
+				}
+			}
+
+			pstInst->iData	+=	iLen;
+
+			if( pstInst->iData < pstInst->iMinHeadLen )
+			{
+				continue;
+			}
+
+			if( pstInst->iPkgLen && pstInst->iData<pstInst->iPkgLen )
+			{
+				continue;
+			}
+                     tlog_debug(pstThread->pstLog, 0, 0, "tconnd recv package from %s:%d;datelen =%d\n",
+					 	inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),
+					 	NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),
+					 	pstInst->iData);
+					 
+			iRecvPackage=tconnd_recv_pkg(pstThread, pstInst);
+
+			if(iRecvPackage>0)
+			{
+                         iTotalRecv+=iRecvPackage;
+			}
+			
+			if( iTotalRecv >= Package_Per_Slice )
+			{
+                          //check recv time every Package_Per_Slice package received
+                          iTotalRecv = iTotalRecv%(Package_Per_Slice);
+			     gettimeofday(&stEnd, NULL);
+       	            TV_DIFF(stSub, stEnd, stStart);
+	                   TV_TO_MS(pstThread->iMsRecv, stSub);	
+			     if( pstThread->iMsRecv > ((pstThread->iRecvSlices*pstThread->pstAppCtx->iTimer)/Time_Slice_Count) )
+			     {
+                               break;
+			    }
+			}
+
+			if( pstInst->iNeedFree )
+			{
+				epoll_ctl(pstThread->epfd, EPOLL_CTL_DEL, pstInst->s, events+i);
+
+				continue;
+			}
+		}
+	}
+
+	return 0;
+}
+
+
+int tconnd_frame2msg(TDRDATA* pstMsg, TDRDATA* pstFrame, TCONNTHREAD* pstThread, TCONNINST** ppstInst)
+{
+	TCONNINST* pstInst;
+	TFRAMEHEAD* pstFrameHead;
+
+	TDRDATA stHost;
+	TDRDATA stNet;
+	int iRet=0;
+
+	pstFrameHead	=	&pstThread->stFrameHead;
+
+	stHost.pszBuff	=	(char*)pstFrameHead;
+	stHost.iBuff	=	(int)sizeof(*pstFrameHead);
+
+	stNet.pszBuff	=	pstFrame->pszBuff;
+	stNet.iBuff	=	pstFrame->iBuff;
+	iRet=TCONNAPI_FRAMEHEAD_NTOH(&stHost, &stNet, 0);
+
+	if( iRet<0 )
+	{
+              tlog_error(pstThread->pstLog, 0, 0, "tconnd_frame2msg:TCONNAPI_FRAMEHEAD_NTOH failed,iRet=%d,error=%s!\n",iRet,tdr_error_string(iRet));
+		return -1;
+	}
+
+	 //reserve connection instance for jump
+	if( pstFrameHead->chCmd == TFRAMEHEAD_CMD_NOTIFY)
+	{
+              return 0;
+	}
+	
+	pstMsg->pszBuff	=	pstFrame->pszBuff + stNet.iBuff;
+	pstMsg->iBuff	=	pstFrame->iBuff - stNet.iBuff;
+
+	
+
+	pstInst		=	tconnd_get_inst(pstThread->pstPool, pstFrameHead->iConnIdx);
+
+	if( !pstInst )
+	{
+		TFRAMEHEAD stFrameHead;
+		stFrameHead.chVer	=	0;
+		stFrameHead.chCmd	=	TFRAMEHEAD_CMD_STOP;
+
+		stFrameHead.iID		=	pstFrameHead->iID;
+		stFrameHead.iConnIdx	=	pstFrameHead->iConnIdx;
+
+		stFrameHead.chExtraType	=	0;
+
+		stFrameHead.stCmdData.stStop.iReason	=	TFRAMEHEAD_REASON_TRANS_LOST;
+		stFrameHead.chTimeStampType	=	0;
+		
+              tlog_error(pstThread->pstLog, 0, 0, "ConnIdx doesnot exsit,idx=%d\n",pstFrameHead->iConnIdx);
+		tconnd_sendto_serinst_by_bus(pstThread, &stFrameHead, NULL, pstThread->iLastSrc);		    
+		return -1;
+	}
+
+	*ppstInst	=	pstInst;
+
+	if( pstInst->fStream && pstInst->fListen )		
+	{
+              tlog_error(pstThread->pstLog, 0, 0, "ConnIdx canot be listen instance ,idx=%d\n",pstFrameHead->iConnIdx);
+		return -1;
+	}
+
+	if( pstInst->fStream )
+	{
+		if( -1!=pstFrameHead->iID )
+		{
+			switch( pstFrameHead->chCmd )
+			{
+			    case TFRAMEHEAD_CMD_START:
+			    case TFRAMEHEAD_CMD_RELAY:
+				  pstInst->iID	=	pstFrameHead->iID;
+				  break;
+        		    default:
+				  if( pstInst->iID != pstFrameHead->iID )
+				  {
+                                     tlog_error(pstThread->pstLog, 0,0, "ID in framehead not equals to id in connect instance");
+					  return -1;
+				  }
+				 break;
+			}
+	      }
+	      else
+	      {
+                    if( pstInst->stAddr.sa_family!=pstFrameHead->stExtraInfo.stIPInfo.nFamily ||
+		          ((struct sockaddr_in*)(&pstInst->stAddr))->sin_port!=pstFrameHead->stExtraInfo.stIPInfo.wPort ||
+		          ((struct sockaddr_in*)(&pstInst->stAddr))->sin_addr.s_addr!=pstFrameHead->stExtraInfo.stIPInfo.ulIp )
+		     {
+                         tlog_error(pstThread->pstLog, 0,0, "addr info in framehead not equals to addr in connect instance");
+			    return -1;
+		     }					
+		}
+	}
+	else
+	{
+		((struct sockaddr_in*)(&pstInst->stAddr))->sin_family	= pstFrameHead->stExtraInfo.stIPInfo.nFamily;
+		((struct sockaddr_in*)(&pstInst->stAddr))->sin_port	= pstFrameHead->stExtraInfo.stIPInfo.wPort;
+		((struct sockaddr_in*)(&pstInst->stAddr))->sin_addr.s_addr = pstFrameHead->stExtraInfo.stIPInfo.ulIp;
+	}
+ 
+	/*
+   	if( TFRAMEHEAD_CMD_STOP==pstFrameHead->chCmd )
+	{
+		pstInst->iNeedFree	=	TFRAMEHEAD_REASON_SELF_CLOSE;
+		pstInst->iNotify	=	0;
+	}
+	*/
+	return 0;
+}
+
+
+void tconnd_pack_ident(TPDUEXTIDENT* pstIdent, TCONNINST* pstInst, PDUINST* pstPDUInst)
+{
+	TPDUEXTIDENT stIdentPlain;
+	TPDUIDENTINFO stIdentInfo;
+	TDRDATA stHost;
+	TDRDATA stNet;
+	LPTDRMETA pstMetaPDUIdent;
+
+	pstMetaPDUIdent	=	pstPDUInst->stLenParser.stQQParser.pstMetaPDUIdent;
+
+	stIdentInfo.iPos	=	pstInst->iIdx;
+	memcpy(stIdentInfo.szIdent, pstInst->szIdent, sizeof(stIdentInfo.szIdent));
+
+	//tlog_info(pstThread->pstLog, 0, 0, "Encryptkey=%s with Identiy.pos =%d,Identity.info =%s\n",pstInst->szEncKey,stIdentInfo.iPos,                  stIdentInfo.szIdent);
+
+	stHost.pszBuff	=	(char*)&stIdentInfo;
+	stHost.iBuff	=	(int) sizeof(stIdentInfo);
+
+	stNet.pszBuff	=	(char*)stIdentPlain.szEncryptIdent;
+	stNet.iBuff	=	(int)sizeof(stIdentPlain.szEncryptIdent);
+
+	tdr_hton(pstMetaPDUIdent, &stNet, &stHost, TPDU_VERSION);
+	stIdentPlain.iLen = stNet.iBuff;
+	pstIdent->iLen	=	(int)sizeof(pstIdent->szEncryptIdent);
+	oi_symmetry_encrypt2(stIdentPlain.szEncryptIdent, stIdentPlain.iLen, pstInst->szEncKey, pstIdent->szEncryptIdent, &pstIdent->iLen);
+
+	/*if( TSEC_ENC_QQ==pstInst->iEncMethod )
+	{
+		stHost.pszBuff	=	(char*)&stIdentInfo;
+		stHost.iBuff	=	(int) sizeof(stIdentInfo);
+
+		stNet.pszBuff	=	(char*)stIdentPlain.szEncryptIdent;
+		stNet.iBuff	=	(int)sizeof(stIdentPlain.szEncryptIdent);
+
+		tdr_hton(pstMetaPDUIdent, &stNet, &stHost, TPDU_VERSION);
+		stIdentPlain.iLen = stNet.iBuff;
+		pstIdent->iLen	=	(int)sizeof(pstIdent->szEncryptIdent);
+		oi_symmetry_encrypt2(stIdentPlain.szEncryptIdent, stIdentPlain.iLen, pstInst->szEncKey, pstIdent->szEncryptIdent, &pstIdent->iLen);
+	}
+	else
+	{
+		stHost.pszBuff	=	(char*)&stIdentInfo;
+		stHost.iBuff	=	(int) sizeof(stIdentInfo);
+
+		stNet.pszBuff	=	(char*)pstIdent->szEncryptIdent;
+		stNet.iBuff	=	(int)sizeof(pstIdent->szEncryptIdent);
+
+		tdr_hton(pstMetaPDUIdent, &stNet, &stHost, TPDU_VERSION);
+	}*/
+}
+
+
+int tconnd_msg2pkg(TDRDATA* pstPkg, TDRDATA* pstMsg, TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+	TDRDATA stHost;
+	TDRDATA stNet;
+	char* pszEnc;
+	int iEnc;
+	int iRet=0;
+
+	if( PDULENPARSERID_BY_QQ!=pstThread->pstPDUInst->iLenParsertype )
+	{
+		pstPkg->pszBuff	=	pstMsg->pszBuff;
+		pstPkg->iBuff	=	pstMsg->iBuff;
+		return 0;
+	}
+
+	tqqapi_init_base(&pstThread->stPDUHead.stBase);
+
+	switch( pstThread->stFrameHead.chCmd )
+	{
+	case TFRAMEHEAD_CMD_START:
+		pstThread->stPDUHead.stBase.bCmd	=	TPDU_CMD_IDENT;
+		tconnd_pack_ident(&pstThread->stPDUHead.stExt.stIdent, pstInst, pstThread->pstPDUInst);
+		break;
+
+	case TFRAMEHEAD_CMD_INPROC:
+		if( pstThread->stFrameHead.stCmdData.stInProc.chNoEnc )
+			pstThread->stPDUHead.stBase.bCmd	=	TPDU_CMD_PLAIN;
+		break;
+
+	default:
+		if( !pstInst->iSendFirstPkg )
+		{
+			pstThread->stPDUHead.stBase.bCmd	=	TPDU_CMD_IDENT;
+			tconnd_pack_ident(&pstThread->stPDUHead.stExt.stIdent, pstInst, pstThread->pstPDUInst);
+		}
+		break;
+	}
+
+	stHost.pszBuff	=	(char*)&pstThread->stPDUHead;
+	stHost.iBuff	=	(int)sizeof(pstThread->stPDUHead);
+
+	stNet.pszBuff	=	pstPkg->pszBuff;
+	stNet.iBuff	=	pstPkg->iBuff;
+
+	iRet=tdr_hton(pstThread->pstPDUInst->stLenParser.stQQParser.pstMetaHead, &stNet, &stHost, TPDU_VERSION);
+	if( iRet<0 )
+	{
+              tlog_error(pstThread->pstLog, 0, 0,"tdr_hton PDU Head failed,iRet=%d,error=%s\n",iRet,tdr_error_string(iRet));
+		return iRet;
+	}
+
+	((TPDUBASE*)pstPkg->pszBuff)->bHeadLen	=	(unsigned char)stNet.iBuff;
+
+	if( TPDU_CMD_PLAIN==pstThread->stPDUHead.stBase.bCmd )
+	{
+		iEnc	=	pstMsg->iBuff;
+
+		if( pstPkg->iBuff - stNet.iBuff < pstMsg->iBuff )
+		{
+                     tlog_info (pstThread->pstLog, 0, 0, "tconnd_msg2pkg:Send buf not enough for connection.IP = %s;Port =%d\n",inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr),NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port));
+			return -1;
+		}
+
+		if( pstMsg->iBuff )
+		{
+			memcpy(pstPkg->pszBuff+stNet.iBuff,  pstMsg->pszBuff, pstMsg->iBuff);
+		}
+	}
+	else /* iEncMethod can only be TCONND_ENC_QQ */
+	{
+		if( pstMsg->iBuff )
+		{
+			pszEnc		=	pstPkg->pszBuff + stNet.iBuff;
+			iEnc		=	pstPkg->iBuff - stNet.iBuff;
+
+			oi_symmetry_encrypt2(pstMsg->pszBuff, pstMsg->iBuff, pstInst->szEncKey, pszEnc, &iEnc);
+		}
+		else
+		{
+			iEnc		=	0;
+		}
+	}
+
+	((TPDUBASE*)pstPkg->pszBuff)->iBodyLen	=	HTONL((long)iEnc);
+
+	pstPkg->iBuff	=	stNet.iBuff + iEnc;
+
+	return 0;
+}
+
+
+
+int tconnd_send_frame(TCONNTHREAD* pstThread, TDRDATA* pstFrame)
+{
+	int i;
+	int iTotal;
+	int iRet;
+	TCONND* pstConnd;
+	CONFINST* pstConfInst;
+	TCONNINST* pstInst;
+	TCONNINST* pstInstNow;
+	TCONNDRUN_CUMULATE* pstRunCum;
+	TRANSINST* pstTransInst;
+	LPPDUINST pstPDUInst;
+	SERIALIZERRUN* pstSerRun;
+	TFRAMECMDINPROC stInProc;
+	TFRAMECMDINPROC* pstInProcNow;
+
+	TDRDATA stMsg;
+	TDRDATA stPkg;
+
+	if( tconnd_frame2msg(&stMsg, pstFrame, pstThread, &pstInst)<0 )
+	{
+		tlog_error(pstThread->pstLog, 0,0, "tconnd_send_frame:failed to convert frame to msg");
+		return -1;
+	}
+
+	if( pstThread->stFrameHead.chCmd == TFRAMEHEAD_CMD_NOTIFY)
+	{
+             tconnd_reserve_connection(pstThread);
+	      return 0;
+	}
+
+	
+	
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+	pstConfInst	=	pstThread->pstConfInst;
+	pstRunCum		=	(TCONNDRUN_CUMULATE*)pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+
+
+	pstTransInst	=	pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+	pstPDUInst	= 	pstThread->pstConfInst->stPDUInstList.astInsts + pstTransInst->iPDULoc;
+
+	pstThread->pstPDUInst	=	pstPDUInst;
+
+	for(i=0; i<pstTransInst->iSerCount; i++)
+	{
+		if( pstThread->iLastSrc==pstConfInst->stSerInstList.astInsts[pstTransInst->aiSerLoc[i]].iDst )
+		{
+			pstSerRun	=	pstRunCum->stSerializerRunList.astSerializers + pstTransInst->aiSerLoc[i];
+	
+			pstSerRun->stTransStat.llRecvPkgSucc++;
+			pstSerRun->stTransStat.llRecvByteSucc	+=	pstFrame->iBuff;
+		}
+	}
+
+	stInProc.nCount	=	1;
+	stInProc.astIdents[0].iConnIdx	=	pstInst->iIdx;
+	stInProc.astIdents[0].iID	=	pstInst->iID;
+
+	if( TFRAMEHEAD_CMD_INPROC==pstThread->stFrameHead.chCmd && pstThread->stFrameHead.stCmdData.stInProc.chValid )
+	{
+		pstInProcNow	=	&pstThread->stFrameHead.stCmdData.stInProc;
+	}
+	else
+	{
+		pstInProcNow	=	&stInProc;
+	}
+
+	iTotal	=	0;
+
+	for(i=0; i<pstInProcNow->nCount; i++)
+	{
+		stPkg.pszBuff	=	pstThread->pszSendBuff;
+		stPkg.iBuff	=	pstThread->iSendBuff;
+
+		pstInstNow	=	tconnd_get_inst(pstThread->pstPool, pstInProcNow->astIdents[i].iConnIdx );
+
+		if( !pstInstNow || pstInstNow->iID!=pstInProcNow->astIdents[i].iID )
+		{
+			continue;
+		}
+	
+		if( tconnd_msg2pkg(&stPkg, &stMsg, pstThread, pstInstNow)<0 )
+		{
+                     tlog_info(pstThread->pstLog, 0, 0,"tconnd_msg2pkg failed\n");
+			continue;
+		}
+		
+		iRet	=	tconnd_sendto_lisinst(pstThread, pstInstNow, &stPkg);	
+
+		if( 0==iRet )
+		{
+		     iTotal++;
+		}
+	}
+
+	if( (  TFRAMEHEAD_CMD_START == pstThread->stFrameHead.chCmd )
+		 &&( iRet == 0 )
+		 &&( pstInstNow->iSendFirstPkg == 1))
+	{
+             tconnd_change_sessionkey(pstThread, pstInstNow);
+	}
+
+	if( TFRAMEHEAD_CMD_STOP==pstThread->stFrameHead.chCmd )
+	{
+	      pstInstNow->iNeedFree	=	TFRAMEHEAD_REASON_SELF_CLOSE;
+	      pstInstNow->iNotify	=	0;
+	      tconnd_notify_lisinst_close(pstThread, pstInstNow,pstThread->stFrameHead.stCmdData.stStop.iReason);
+	}
+	
+	return iTotal==(int)pstInProcNow->nCount ? 0 : -1;
+}
+
+
+
+int tconnd_proc_send(TCONNTHREAD* pstThread)
+{
+	int i=0;
+	TDRDATA stFrame;
+	struct timeval stStart;
+	struct timeval stEnd;
+	struct timeval stSub;
+       int iMaxSend=pstThread->pstAppCtx->iTimer-pstThread->iMsRecv-1;
+	int iMsSend=0;
+	int iRet=0;
+   
+
+	gettimeofday(&stStart, NULL);
+
+	while(1)
+	{
+		i++;
+
+		/* time based broken. */
+		if( 0==(i % Package_Per_Slice) )
+		{
+			gettimeofday(&stEnd, NULL);
+			TV_DIFF(stSub, stEnd, stStart);
+			TV_TO_MS(iMsSend, stSub);
+
+			if( iMsSend >= iMaxSend )
+			{
+				break;
+			}
+		}
+
+		
+		pstThread->iLastDst	=	0;
+		pstThread->iLastSrc	=	TBUS_ADDR_ALL;
+
+		/*该用peek 方式收包以节省性能*/
+              /*stFrame.pszBuff	=	pstThread->pszMsgBuff;
+		stFrame.iBuff	=	pstThread->iMsgBuff;
+		if( tbus_recv(pstThread->pstAppCtx->iBus, &pstThread->iLastSrc, &pstThread->iLastDst, stFrame.pszBuff, (size_t*)&stFrame.iBuff, 0)<0 )
+		{
+			break;
+		}*/
+
+		iRet=tbus_peek_msg(pstThread->pstAppCtx->iBus, &pstThread->iLastSrc, &pstThread->iLastDst, &stFrame.pszBuff, &stFrame.iBuff, 0);
+		if( 0 != iRet)
+		{
+                  break;
+		}
+              tlog_debug(pstThread->pstLog, 0, 0,"Recv package from tbus:src=%s,datelen=%d\n",inet_ntoa(*(struct in_addr *)&pstThread->iLastSrc),stFrame.iBuff);
+		tconnd_send_frame(pstThread, &stFrame);
+
+		/*删除peek msg*/
+		iRet=tbus_delete_msg(pstThread->pstAppCtx->iBus, pstThread->iLastSrc, pstThread->iLastDst);
+		if( 0 != iRet)
+		{
+                     tlog_error(pstThread->pstLog, 0, 0,"delete package from tbus error:src=%s,des=%s\n",inet_ntoa(*(struct in_addr *)&pstThread->iLastSrc),inet_ntoa(*(struct in_addr *)&pstThread->iLastDst));
+		}
+		
+	}
+
+	if( 1==i)
+	{
+          //recv no package
+          return -1;
+	}
+
+	return 0;
+}
+
+
+
+int tconnd_proc_once(TCONNTHREAD* pstThread)
+{
+	
+	int       iRecvOnWork=0;
+	int       iSendOnWork=0;
+
+	iRecvOnWork=tconnd_proc_recv(pstThread);
+
+	iSendOnWork=tconnd_proc_send(pstThread);
+
+	if( iRecvOnWork!=0 && iSendOnWork!=0 )
+	{
+            return -1;
+	}
+
+	return 0;
+}
+
+
+
+int tconnd_scan_idle(TCONNTHREAD* pstThread, int iIsShutdown)
+{
+	CONFINST* pstConfInst;
+	TCONND* pstConnd;
+	int iMax;
+	int i;
+	TMEMBLOCK* pstBlock;
+	TCONNINST* pstInst;
+	LISTENERLIST* pstListenerList;
+	LISTENER* pstListener;
+
+	pstConfInst	=	pstThread->pstConfInst;
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+
+	iMax	=	TMEMPOOL_GET_CAP(pstThread->pstPool);
+
+	if( !iIsShutdown )
+	{
+		iMax	/=	pstThread->iScanHerz;
+
+	}
+
+	pstListenerList	=	&pstConnd->stListenerList;
+
+	for(i=0; i<iMax; i++)
+	{
+		pstBlock	=	TMEMPOOL_GET_PTR(pstThread->pstPool, pstThread->iScanPos);
+
+		pstThread->iScanPos++;
+
+		pstThread->iScanPos	=	pstThread->iScanPos % (TMEMPOOL_GET_CAP(pstThread->pstPool));
+
+		if( !pstBlock->fValid )
+		{
+			continue;
+		}
+
+		pstInst		=	(TCONNINST*)TMEMBLOCK_GET_DATA(pstBlock);
+
+		if( pstInst->fListen && !iIsShutdown )
+		{
+			continue;
+		}
+
+		if( iIsShutdown )
+		{
+                     if( !pstInst->fListen )
+                     {
+                            //notify stop msg to client
+				tconnd_notify_lisinst_close(pstThread,pstInst,TPDU_STOP_TCONND_SHUTDOWN);
+                     }
+			tconnd_safe_close(pstThread, TMEMPOOL_GET_BLOCK_IDX(pstBlock), TFRAMEHEAD_REASON_TCONND_SHUTDOWN, 1);
+		}
+		else if( pstInst->iNeedFree )
+		{
+			tconnd_safe_close(pstThread, TMEMPOOL_GET_BLOCK_IDX(pstBlock), pstInst->iNeedFree, pstInst->iNotify);
+		}
+		else
+		{
+			pstListener	=	pstListenerList->astListeners + pstInst->iLisLoc;
+			if( !pstListener->iMaxIdle )
+			{
+				continue;
+			}
+
+			if( (gs_tNow - pstInst->tLastRecv) <= pstListener->iMaxIdle )
+			{
+				continue;
+			}
+
+			/* begin to close the socket. */
+			tconnd_safe_close(pstThread, TMEMPOOL_GET_BLOCK_IDX(pstBlock), TFRAMEHEAD_REASON_IDLE_CLOSE, 1);
+		}
+	}
+
+	return 0;
+}
+
+
+
+int tconnd_notify_waitqueue(TCONNTHREAD* pstThread)
+{
+	TPDUHEAD stHead;
+	CONFINST* pstConfInst;
+	TCONND* pstConnd;
+	TMEMBLOCK* pstBlock;
+	NETTRANSLIST* pstNetTransList;
+	NETTRANS* pstNetTrans;
+	TRANSINSTLIST* pstTransInstList;
+	TRANSINST* pstTransInst;
+	PDUINST* pstPDUInst;
+	TCONNINST* pstInst;
+	TDRDATA stNet;
+	TDRDATA stHost;
+	int i;
+	int iMax;
+	int iPos;
+	int iCount;
+
+	pstConfInst	=	pstThread->pstConfInst;
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+
+	iMax		=	TMEMPOOL_GET_CAP(pstThread->pstPool);
+	iCount		=	0;
+
+	iMax		/=	pstThread->iScanHerz;
+
+	tqqapi_init_base(&stHead.stBase);
+
+	stHead.stBase.bCmd	=	TPDU_CMD_QUEINFO;
+
+	pstTransInstList	=	&pstConfInst->stTransInstList;
+	pstNetTransList		=	&pstConnd->stNetTransList;
+
+	for(i=0; i<pstTransInstList->iCount; i++)
+	{
+		pstTransInst	=	pstTransInstList->astInsts + i;
+		pstNetTrans	=	pstNetTransList->astNetTrans + i;
+
+		if( !pstNetTrans->iUseWaitQueue )
+			continue;
+
+		pstPDUInst	=	pstConfInst->stPDUInstList.astInsts + pstTransInst->iPDULoc;
+
+		iPos	=	pstTransInst->iWaitQueueHead;
+
+		while(-1!=iPos && iCount<iMax)
+		{
+			pstBlock	=	TMEMPOOL_GET_PTR(pstThread->pstPool, iPos);
+
+			pstInst		=	(TCONNINST*)TMEMBLOCK_GET_DATA(pstBlock);
+
+			iPos		=	pstInst->iQueueNext;
+
+
+			if( gs_tNow - pstInst->tLastRecv < pstNetTrans->iQueueNotifyInterval )
+			{
+				continue;
+			}
+
+			iCount++;
+
+			pstInst->tLastRecv	=	gs_tNow;
+
+			if( PDULENPARSERID_BY_QQ!=pstPDUInst->iLenParsertype )
+			{
+				continue;
+			}
+			stHead.stExt.stQueInfo.iMax	= (int) (pstTransInst->uiTokenAlloc - pstTransInst->uiTokenPass);
+
+			stHead.stExt.stQueInfo.iPos	= (int) (pstInst->uiQueueToken - pstTransInst->uiTokenPass);
+
+			stHost.pszBuff	=	(char*)&stHead;
+			stHost.iBuff	=	(int)sizeof(stHead);
+			stNet.pszBuff	=	pstThread->pszSendBuff;
+			stNet.iBuff	=	pstThread->iSendBuff;
+
+			if(tdr_hton(pstPDUInst->stLenParser.stQQParser.pstMetaHead, &stNet, &stHost, TPDU_VERSION)<0 )
+			{
+                            tlog_debug(pstThread->pstLog, 0,0, "notify conn(idx:%d) ignroed,tdr_ntoh failed",pstInst->iIdx);
+				continue;
+			} 
+			tconnd_sendto_lisinst(pstThread, pstInst, &stNet);
+
+		}
+	}
+
+	return 0;
+}
+
+
+
+int tconnd_active_waitqueue(TCONNTHREAD* pstThread)
+{
+	CONFINST* pstConfInst;
+	TCONND* pstConnd;
+	TCONNDRUN_STATUS* pstRunStatus;
+	TCONNDRUN_CUMULATE *pstRunCum;
+	TMEMBLOCK* pstBlock;
+	NETTRANSLIST* pstNetTransList;
+	NETTRANS* pstNetTrans;
+	TRANSINSTLIST* pstTransInstList;
+	TRANSINST* pstTransInst;
+	NETTRANSRUN* pstTransRun;
+	TCONNINST* pstInst;
+	int i;
+	int iMax;
+	int iPos;
+	int iCount;
+	int iPermit;
+
+	pstRunStatus		=	(TCONNDRUN_STATUS*) pstThread->pstAppCtx->stRunDataStatus.pszBuff;
+	pstRunCum                   =  (TCONNDRUN_CUMULATE*) pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+	pstConfInst	=	pstThread->pstConfInst;
+	pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+
+	pstTransInstList=	&pstConfInst->stTransInstList;
+	pstNetTransList	=	&pstConnd->stNetTransList;
+
+	for(i=0; i<pstTransInstList->iCount; i++)
+	{
+		pstTransInst	=	pstTransInstList->astInsts + i;
+		pstNetTrans	=	pstNetTransList->astNetTrans + i;
+		pstTransRun	=	pstRunCum->stNetTransRunList.astNetTrans + i;
+
+		if( gs_tNow <= pstTransInst->tLastActive )
+			continue;
+
+		pstTransInst->tLastActive	=	gs_tNow;
+
+		memcpy(&pstTransRun->stConnInfo, &pstTransInst->stConnInfo, sizeof(pstTransRun->stConnInfo));
+
+		
+		
+		if( 0==pstTransInst->iConnPermit )
+			iPermit	=	pstNetTrans->stConnLimit.iMaxConn;
+		else
+			iPermit	=	pstTransInst->iConnPermit;
+
+		if( 0==iPermit )
+			iPermit	=	pstConnd->iMaxFD;
+
+		iMax	=	pstNetTrans->stConnLimit.iSpeed;
+		if ((0 >= iMax) || ( iMax + pstTransInst->stConnInfo.iActive>iPermit ))
+		{
+			iMax	=	iPermit - pstTransInst->stConnInfo.iActive;
+		}
+
+		iPos	=	pstTransInst->iWaitQueueHead;
+		iCount	=	0;
+		while(-1!=iPos && iCount<iMax)
+		{
+			pstBlock	=	TMEMPOOL_GET_PTR(pstThread->pstPool, iPos);
+
+			pstInst		=	(TCONNINST*)TMEMBLOCK_GET_DATA(pstBlock);
+
+			iPos		=	pstInst->iQueueNext;
+
+			iCount++;
+
+			tlog_debug(pstThread->pstLog, 0,0, "conn(s:%d, idx:%d) is active, its auth status:%d",
+				pstInst->s, pstInst->iIdx, pstInst->iAuthPass);
+			tconnd_pop_queue(pstThread, pstInst);
+			tconnd_recv_pkg(pstThread, pstInst);
+		}
+	}
+
+	pstRunStatus->iNow	=	(int) gs_tNow;
+
+	return 0;
+}
+
+
+
+int tconnd_scan(TCONNTHREAD* pstThread, int iIsShutdown)
+{
+	tconnd_scan_idle(pstThread, iIsShutdown);
+
+	if( !iIsShutdown )
+	{
+		tconnd_active_waitqueue(pstThread);
+		tconnd_notify_waitqueue(pstThread);
+	}
+
+	return 0;
+}
+
+
+
+void* tconnd_thread_proc(void* pvArg)
+{
+	TCONNTHREAD* pstThread;
+	TAPPCTX* pstAppCtx;
+	int iIdle=0;
+
+	pstThread	=	(TCONNTHREAD*) pvArg;
+	pstAppCtx	=	(TAPPCTX*)pstThread->pstAppCtx;
+
+	while( 1 )
+	{
+		if( pstThread->iIsExit )
+			break;
+
+		if( tconnd_proc_once(pstThread)<0 )
+			iIdle++;
+
+		if( iIdle>pstAppCtx->iIdleCount )
+		{
+			iIdle	=	0;
+			usleep(pstAppCtx->iIdleSleep);
+		}
+
+		if( pstThread->iTickCount!=pstAppCtx->iTickCount )
+		{
+			pstThread->iTickCount	=	pstAppCtx->iTickCount;
+			tconnd_scan(pstThread, 0);
+		}
+	}
+
+	return (void*)pstThread->iIsExit;
+}
+
+
+
+int tconnd_init_multi(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	int i;
+	int j;
+	int s;
+	int iLimit;
+	int iUpUnit = 0;
+	int iBuff = 0;
+	int iRet;
+	TCONNPOOL* pstPool;
+	TCONND* pstConnd;
+	CONFINST* pstConfInst;
+	NETTRANSLIST* pstNetTransList;
+	LISTENERLIST* pstListenerList;
+	SERIALIZERLIST* pstSerializerList;
+	NETTRANS* pstNetTrans;
+	TRANSINST* pstTransInst;
+	LISTENER* pstListener;
+	PDUINST* pstPDUInst;
+	TCONNTHREAD* pstThread;
+
+
+	pstConfInst		=	&pstEnv->stConfInst;
+	pstConnd		=	(TCONND*)pstAppCtx->stConfData.pszBuff;
+	pstNetTransList	=	&pstConnd->stNetTransList;
+	pstListenerList	=	&pstConnd->stListenerList;
+	pstSerializerList=	&pstConnd->stSerializerList;
+
+	for(i=0; i<pstNetTransList->iCount; i++)
+	{
+		pstThread	=	&pstEnv->astThreads[i];
+
+		pstThread->pstConfInst	=	&pstEnv->stConfInst;
+		pstThread->pstAppCtx	=	pstAppCtx;
+
+		pstThread->iScanHerz	=	0;
+
+		if( pstAppCtx->iTimer )
+		{
+			pstThread->iScanHerz	=	1000/pstAppCtx->iTimer;
+		}
+		if( pstThread->iScanHerz<=0 )
+		{
+			pstThread->iScanHerz	=	1;
+		}
+
+	}
+
+	for(i=0; i<pstNetTransList->iCount; i++)
+	{
+		pstThread	=	&pstEnv->astThreads[i];
+
+		pstThread->pstLog	=	NULL;
+		tapp_get_category(NULL, (int*)&pstThread->pstLog);
+
+		if( !pstThread->pstLog )
+		{
+			printf("error: can not get default category for thread no %d.\n", i);
+			return -1;
+		}
+
+		tlog_crit(pstThread->pstLog, 0, 0, "begin initialize, multi-threaded %d.\n", i);
+
+		pstTransInst    =   &pstConfInst->stTransInstList.astInsts[i];
+		pstNetTrans	=   &pstNetTransList->astNetTrans[i];
+
+		iLimit  	=   pstNetTrans->stConnLimit.iMaxConn;
+		if( iLimit<=0 )
+		{
+			tlog_error(pstThread->pstLog, 0, 0, "the max-conn for nettrans \'%s\' is %d, <=0.\n", pstNetTrans->szName, iLimit);
+			return -1;
+		}
+
+		pstPDUInst	=	pstConfInst->stPDUInstList.astInsts + pstConfInst->stTransInstList.astInsts[i].iPDULoc;
+
+		iUpUnit   =	pstPDUInst->iUpUnit;
+		iBuff      =      pstPDUInst->iUnit;
+		if( iBuff<=0 )
+		{
+			tlog_error(pstThread->pstLog, 0, 0, "the pdu unit size for nettrans \'%s\' is %d, <=0.\n", pstNetTrans->szName, iBuff);
+			return -1;
+		}
+
+		pstThread->iPkgUnit		=	iUpUnit;
+		pstThread->iPoolUnit	=	pstThread->iPkgUnit + (int) offsetof(TCONNINST, szBuff);
+
+		iRet	=	tconnd_init_pool(&pstThread->pstPool, iLimit, pstThread->iPoolUnit);
+
+		if( iRet<0 )
+		{
+			tlog_error(pstThread->pstLog, 0, 0, "tconnd_init_pool failed, max=%d, unit=%d.\n", iLimit, pstThread->iPoolUnit);
+			return -1;
+		}
+
+		pstPool		=	pstThread->pstPool;
+
+		pstThread->epfd	=	epoll_create(iLimit);
+
+		if( -1==pstThread->epfd )
+		{
+			tlog_error(pstThread->pstLog, 0, 0, "create epoll-fd[MAXFD=%d] failed.\n", iLimit);
+			return -1;
+		}
+
+		for(j=0; j<pstTransInst->iLisCount; j++)
+		{
+			pstListener =   pstListenerList->astListeners + pstTransInst->aiLisLoc[j];
+
+			s	=	tnet_listen(pstListener->szUrl, pstListener->iBacklog);
+
+			if( tconnd_add_conn(pstThread, s, i, pstTransInst->aiLisLoc[j], 1, NULL)<0 )
+			{
+                            tlog_error(pstThread->pstLog, 0, 0, "tconnd_add_conn failed.\n");
+				return -1;
+			}
+		}
+
+		pstThread->iSendBuff	=	iBuff + sizeof(TFRAMEHEAD);
+		pstThread->pszSendBuff	=	malloc(pstThread->iSendBuff);
+		pstThread->iRecvBuff	=	iBuff + sizeof(TFRAMEHEAD);
+		pstThread->pszRecvBuff	=	malloc(pstThread->iRecvBuff);
+
+		pstThread->iMsgBuff	=	iBuff + sizeof(TFRAMEHEAD);
+		pstThread->pszMsgBuff	=	malloc(pstThread->iMsgBuff);
+
+		if( !pstThread->pszSendBuff || !pstThread->pszRecvBuff || !pstThread->pszMsgBuff )
+		{
+			tlog_error(pstThread->pstLog, 0, 0, "alloc thread buffer size %d failed.\n", pstThread->iSendBuff);
+			return -1;
+		}
+
+	}
+	/* multi-threading: one thread for a net-trans link. */
+
+	for(i=0; i<pstNetTransList->iCount; i++)
+	{
+		pstThread	=	&pstEnv->astThreads[i];
+
+		if( pthread_create(&pstThread->tid, NULL, tconnd_thread_proc, pstThread)<0 )
+		{
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+
+
+int tconnd_init(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	int i;
+	TCONND* pstConnd;
+	SERINSTLIST* pstSerInstList;
+	SERINST* pstSerInst;
+	int iRet = 0;
+	
+	if( !pstAppCtx->stConfData.iMeta )
+	{
+		printf("error: can not find meta \'%s\'.\n", pstAppCtx->stConfData.pszMetaName);
+		return -1;
+	}
+
+	if( !pstAppCtx->stRunDataStatus.iMeta ||  !pstAppCtx->stRunDataCumu.iMeta)
+	{
+		printf("error: can not find meta \'%s\'.\n", pstAppCtx->stRunDataStatus.pszMetaName);
+		return -1;
+	}
+	pstConnd	=	(TCONND*)pstAppCtx->stConfData.pszBuff;
+
+	/*设置tconnd默认epoll waittime为零*/
+	pstAppCtx->iEpollWait = 0;
+	
+	iRet = tconnapi_initialize(pstAppCtx->pszGCIMKey, pstAppCtx->iBusinessID);
+	if (0 != iRet)
+	{
+		printf("tconnapi_initialize failed by GCIMkey %s and businessid %d, iRet: 0x%x\n",
+			pstAppCtx->pszGCIMKey, pstAppCtx->iBusinessID, iRet);
+		return iRet;
+	}
+	
+	if( tconnd_init_confinst(&pstEnv->stConfInst, pstConnd)<0 )
+	{
+		printf("error: init config failed.\n");
+		return -1;
+	}
+	
+	if( tconnd_init_svrskey(pstAppCtx, pstEnv)<0 )
+	{
+		printf("error: tconnd_init_svrskey failed.\n");
+		return -1;
+	}
+	
+	pstSerInstList	=	&pstEnv->stConfInst.stSerInstList;
+	for( i=0; i<pstSerInstList->iCount; i++ )
+	{
+		pstSerInst	=	pstSerInstList->astInsts + i;
+
+		if( tbus_connect(pstAppCtx->iBus, pstSerInst->iDst)<0 )
+		{
+			printf("error: tbus_connect to Serializer<URL:%s> failed.\n", 
+					tbus_addr_ntoa(pstSerInst->iDst));
+			return -1;
+		}
+
+	}
+
+	if( pstConnd->iThreading )
+	{
+		return tconnd_init_multi(pstAppCtx, pstEnv);
+	}
+	else
+	{
+		return tconnd_init_single(pstAppCtx, pstEnv);
+	}
+}
+
+
+int tconnd_fini_multi(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	int i;
+	void* pvRet;
+	TCONNTHREAD* pstThread;
+
+	for(i=0; i<TCONND_MAX_NETTRANS; i++)
+	{
+		pstThread	=	&pstEnv->astThreads[i];
+
+		if( pstThread->iIsValid )
+			pstThread->iIsExit	=	1;
+	}
+
+	for(i=0; i<TCONND_MAX_NETTRANS; i++)
+	{
+		pstThread	=	&pstEnv->astThreads[i];
+
+		if( pstThread->iIsValid )
+			pthread_join(pstThread->tid, &pvRet);
+	}
+
+	for(i=0; i<TCONND_MAX_NETTRANS; i++)
+	{
+		pstThread	=	&pstEnv->astThreads[i];
+
+		if( pstThread->iIsValid )
+		{
+			tconnd_scan(pstThread, 1);
+
+			if( -1!=pstThread->epfd )
+			{
+				epoll_destroy(pstThread->epfd);
+				pstThread->epfd	=	-1;
+			}
+
+			pstThread->iIsValid	=	0;
+		}
+
+		if( pstThread->pszSendBuff )
+		{
+			free(pstThread->pszSendBuff);
+			pstThread->pszSendBuff	=	NULL;
+		}
+
+		if( pstThread->pszRecvBuff )
+		{
+			free(pstThread->pszRecvBuff);
+			pstThread->pszRecvBuff	=	NULL;
+		}
+
+		if( pstThread->pszMsgBuff )
+		{
+			free(pstThread->pszMsgBuff);
+			pstThread->pszMsgBuff	=	NULL;
+		}
+
+		if( pstThread->pstLog )
+			tlog_crit(pstThread->pstLog, 0, 0, "begin finitialize, multi-threaded %d.\n", i);
+	}
+
+	tconnapi_fini();
+	
+	return 0;
+}
+
+int tconnd_fini_single(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	TCONNTHREAD* pstThread;
+
+/*
+	if( pstAppCtx->iLib )
+	{
+		tdr_free_lib((LPTDRMETALIB*)&pstAppCtx->iLib);
+		pstAppCtx->iLib	=	0;
+	}
+*/
+
+	pstThread	=	&pstEnv->astThreads[0];
+
+	tconnd_scan(pstThread, 1);
+
+	if( -1!=pstThread->epfd )
+	{
+		epoll_destroy(pstThread->epfd);
+		pstThread->epfd	=	-1;
+	}
+
+	if( pstThread->pszSendBuff )
+	{
+		free(pstThread->pszSendBuff);
+
+		pstThread->pszSendBuff	=	NULL;
+	}
+
+	if( pstThread->pszRecvBuff )
+	{
+		free(pstThread->pszRecvBuff);
+
+		pstThread->pszRecvBuff	=	NULL;
+	}
+
+	if( pstThread->pszMsgBuff )
+	{
+		free(pstThread->pszMsgBuff);
+
+		pstThread->pszMsgBuff	=	NULL;
+	}
+
+	if( pstThread->pstLog )
+		tlog_crit(pstThread->pstLog, 0, 0, "begin finitialize, single-threaded.\n");
+	
+	tconnapi_fini();
+	
+	return 0;
+}
+
+int tconnd_tick_multi(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	gs_tNow	=	time(NULL);
+
+	return 0;
+}
+
+int tconnd_tick_single(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	gs_tNow	=	time(NULL);
+	static time_t	tsPeriod = 0;
+	static int         iCount=0;
+	
+	
+	/* sean add 2009-01-21 for period load svrs key */
+	if (gs_tNow - tsPeriod >= 10)
+	{
+		tsPeriod = gs_tNow;
+		tconnd_svrskey_mgr_compare (pstEnv);
+	}
+
+	/*adjust recv/send time */
+
+        tconnd_adjust_recvtime(&pstEnv->astThreads[0]);
+
+	
+	tconnd_scan(&pstEnv->astThreads[0], 0);
+	
+	return 0;
+}
+
+int tconnd_reload(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	TDRDATA stHost;
+	LPTDRMETA pstMeta;
+
+	pstMeta	=	(LPTDRMETA)pstAppCtx->stRunDataStatus.iMeta;
+	if( !pstMeta )
+	{
+		return -1;
+	}
+	stHost.pszBuff	=	(char*)pstAppCtx->stRunDataStatus.pszBuff;
+	stHost.iBuff	=	(int) pstAppCtx->stRunDataStatus.iLen;
+       tdr_output_fp(pstMeta, stdout, &stHost, 0, 0);
+	   
+       pstMeta	=	(LPTDRMETA)pstAppCtx->stRunDataCumu.iMeta;
+	if( !pstMeta )
+	{
+		return -1;
+	}
+	stHost.pszBuff	=	(char*)pstAppCtx->stRunDataCumu.pszBuff;
+	stHost.iBuff	=	(int) pstAppCtx->stRunDataCumu.iLen;
+       tdr_output_fp(pstMeta, stdout, &stHost, 0, 0);
+	
+
+	return 0;
+}
+
+int tconnd_reload_multi(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	return tconnd_reload(pstAppCtx, pstEnv);
+}
+
+int tconnd_reload_single(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	return tconnd_reload(pstAppCtx, pstEnv);
+}
+
+int tconnd_proc_multi(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	int i;
+	TCONNTHREAD* pstThread;
+
+	for(i=0; i<TCONND_MAX_NETTRANS; i++)
+	{
+		pstThread	=	&pstEnv->astThreads[i];
+
+		if( !pstThread->iIsValid )
+			continue;
+
+		if( pthread_kill(pstThread->tid, 0)<0 )
+		{
+			continue;
+		}
+	}
+
+	usleep(100000);
+
+	return 0;
+}
+
+int tconnd_proc_single(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+	return tconnd_proc_once(&pstEnv->astThreads[0]);
+}
+
+int main(int argc, char* argv[])
+{
+	int iRet;
+	void* pvArg	=	&gs_stEnv;
+
+	memset(&gs_stEnv, 0, sizeof(gs_stEnv));
+	memset(&gs_stAppCtx, 0, sizeof(gs_stAppCtx));
+	gs_stAppCtx.argc	=	argc;
+	gs_stAppCtx.argv	=	argv;
+
+	gs_stAppCtx.iTimer	=	100;
+
+	gs_stAppCtx.pfnInit	=	(PFNTAPPFUNC)tconnd_init;
+	gs_stAppCtx.pfnFini	=	(PFNTAPPFUNC)NULL;
+	gs_stAppCtx.pfnProc	=	(PFNTAPPFUNC)NULL;
+	gs_stAppCtx.pfnTick	=	(PFNTAPPFUNC)NULL;
+	gs_stAppCtx.pfnReload	=	(PFNTAPPFUNC)NULL;
+
+	gs_tNow				=	time(NULL);
+
+	gs_stAppCtx.iLib	=	(int)g_szMetalib_tconnd;	
+       gs_stAppCtx.uiVersion=TAPP_MAKE_VERSION(MAJOR,MINOR, REV, BUILD);
+	   
+	iRet	=	tapp_def_init(&gs_stAppCtx, pvArg);
+	if( iRet<0 )
+	{
+		printf("Error: Initialization failed.\n");
+		return iRet;
+	}
+
+	if( gs_stAppCtx.stConfData.iLen<(int)sizeof(TCONND) )
+	{
+		printf("Error: bad confdata length.\n");
+		return -1;
+	}
+
+	if( gs_stAppCtx.stRunDataStatus.iLen<(int)sizeof(TCONNDRUN_STATUS) 
+		||gs_stAppCtx.stRunDataCumu.iLen<(int)sizeof(TCONNDRUN_CUMULATE)  )
+	{
+		printf("Error: bad rundata length.\n");
+		return -1;
+	}
+
+	tconnd_init_tconndrun(&gs_stAppCtx, (TCONND*)gs_stAppCtx.stConfData.pszBuff);
+
+	((TCONNDRUN_STATUS*)gs_stAppCtx.stRunDataStatus.pszBuff)->iUpTime	=	(int) time(NULL);
+
+	if( ((TCONND*)gs_stAppCtx.stConfData.pszBuff)->iThreading )
+	{
+		gs_stAppCtx.pfnFini	=	(PFNTAPPFUNC)tconnd_fini_multi;
+		gs_stAppCtx.pfnProc	=	(PFNTAPPFUNC)tconnd_proc_multi;
+		gs_stAppCtx.pfnTick	=	(PFNTAPPFUNC)tconnd_tick_multi;
+		gs_stAppCtx.pfnReload	=	(PFNTAPPFUNC)tconnd_reload_multi;
+	}
+	else
+	{
+		gs_stAppCtx.pfnFini	=	(PFNTAPPFUNC)tconnd_fini_single;
+		gs_stAppCtx.pfnProc	=	(PFNTAPPFUNC)tconnd_proc_single;
+		gs_stAppCtx.pfnTick	=	(PFNTAPPFUNC)tconnd_tick_single;
+		gs_stAppCtx.pfnIdle    =     (PFNTAPPFUNC)tconnd_proc_idle;
+		gs_stAppCtx.pfnReload	=	(PFNTAPPFUNC)tconnd_reload_single;
+		
+	}
+
+	gs_tNow				=	time(NULL);
+
+	iRet	=	tapp_def_mainloop(&gs_stAppCtx, pvArg);
+
+	tapp_def_fini(&gs_stAppCtx, pvArg);
+
+	return iRet;
+}
+
+
+
+int tconnd_get_thttp_pkglen(TCONNINST* pstInst, TCONNTHREAD* pstThread)
+{
+	TRANSINST* pstTransInst;
+	PDUINST* pstPDUInst;
+	//LPPDULENTHTTPPARSERINST pstThttpParser ; 
+	char *pszDataBase;
+	int iMaxLen;
+	int i;
+
+	assert(NULL != pstInst);
+	assert(NULL != pstThread);
+	assert(0 <= pstInst->iPkgLen);
+
+	if (0 >= pstInst->iData)
+	{
+		return -1;
+	}
+	
+	pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+	pstPDUInst	=	pstThread->pstConfInst->stPDUInstList.astInsts + pstTransInst->iPDULoc;
+
+	
+	/*分析数据流，以'\0'字节进行分包*/
+	iMaxLen = pstInst->iData;
+	if (iMaxLen > pstPDUInst->iUpUnit)
+	{
+		iMaxLen = pstPDUInst->iUpUnit;
+	}	
+	pszDataBase = pstInst->szBuff + pstInst->iOff;
+	for (i = pstInst->iPkgLen; i < iMaxLen; i++)
+	{
+	   if ('\0' == pszDataBase[i])
+	   {
+		   break;
+	   }
+	}/*for (i = pstInst->iPkgLen; i < iMaxLen; i++)*/
+	if (i >= iMaxLen)
+	{
+		pstInst->iPkgLen = i;
+		return -1;
+	}
+	else
+	{
+		pstInst->iPkgLen = i + 1;
+	}
+	
+	
+	if ( pstInst->iPkgLen > pstPDUInst->iUpUnit) 
+	{
+		/*上行包超过最大长度限制，则直接断开连接*/
+		pstInst->iNeedFree	=	TFRAMEHEAD_REASON_BAD_PKGLEN;
+		return -1;
+	}
+
+	return 0;
+}
+
+int tconnd_get_none_pkglen(TCONNINST* pstInst, TCONNTHREAD* pstThread)
+{
+	if (0 >= pstInst->iData)
+	{
+		return -1;
+	}
+	else
+	{
+		pstInst->iPkgLen	=	pstInst->iData;
+		return 0;
+	}
+}
+
+int tconnd_get_qq_pkglen(TCONNINST* pstInst, TCONNTHREAD* pstThread)
+{
+	TRANSINST* pstTransInst;
+	PDUINST* pstPDUInst;
+	char* pszBuff;
+	LPPDULENQQPARSERINST pstQQParser; 
+	char *pszDataBase;
+
+	pstTransInst	=	pstThread->pstConfInst->stTransInstList.astInsts + pstInst->iTransLoc;
+	pstPDUInst	=	pstThread->pstConfInst->stPDUInstList.astInsts + pstTransInst->iPDULoc;
+	pstQQParser = &pstPDUInst->stLenParser.stQQParser;
+
+	pszDataBase = pstInst->szBuff + pstInst->iOff; 
+
+	if( pstInst->iData < (pstQQParser->iHeadLenNOff + pstQQParser->iHeadLenUnitSize))
+	{
+		return -1;
+	}
+
+	pszBuff		=	pszDataBase + pstQQParser->iHeadLenNOff;
+
+	TDR_GET_INT_NET(pstInst->iHeadLen, pstQQParser->iHeadLenUnitSize, pszBuff);
+
+
+	if( pstInst->iData < (pstQQParser->iBodyLenNOff + pstQQParser->iBodyLenUnitSize))
+	{
+		return -1;
+	}
+
+	pszBuff		=	pszDataBase + pstQQParser->iBodyLenNOff;
+
+	TDR_GET_INT_NET(pstInst->iPkgLen, pstQQParser->iBodyLenUnitSize, pszBuff);
+
+	pstInst->iPkgLen	+=	pstInst->iHeadLen;
+
+	if( pstInst->iPkgLen<=0 )
+	{
+		pstInst->iNeedFree	=	TFRAMEHEAD_REASON_BAD_PKGLEN;
+		pstInst->iNotify	=	1;
+		return -1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+
+int tconnd_change_sessionkey(TCONNTHREAD * pstThread, TCONNINST * pstInst)
+{
+   TPDUHEAD stHead;
+   TDRDATA  stHost;
+   TDRDATA  stNet;
+   char          szNewKey[TQQ_KEY_LEN]={0};
+   
+   if( PDULENPARSERID_BY_QQ!=pstThread->pstPDUInst->iLenParsertype )
+   {
+        return 0;
+   }
+
+   tqqapi_init_base(&stHead.stBase);
+
+   stHead.stBase.bCmd	=	TPDU_CMD_CHGSKEY;
+
+   stHead.stExt.stChgSkey.nType = 0;
+
+   //generate new sessionkey
+   tconnd_randstr(szNewKey, sizeof(szNewKey));
+
+   //encrypted new key with old key
+   oi_symmetry_encrypt2(szNewKey, (int)TQQ_KEY_LEN, pstInst->szEncKey, stHead.stExt.stChgSkey.szEncryptSkey,(int *) &(stHead.stExt.stChgSkey.nLen));
+   tlog_info(pstThread->pstLog, 0, 0, "old sessionkey =%s\n",pstInst->szEncKey);
+
+   //change to new key
+   memcpy(pstInst->szEncKey,szNewKey,(int)TQQ_KEY_LEN);
+
+   stHost.pszBuff	=	(char*)&stHead;
+   stHost.iBuff	       =	(int)sizeof(stHead);
+   stNet.pszBuff	=	pstThread->pszSendBuff;
+   stNet.iBuff	       =	pstThread->iSendBuff;
+
+   if(tdr_hton(pstThread->pstPDUInst->stLenParser.stQQParser.pstMetaHead, &stNet, &stHost, TPDU_VERSION)<0 )
+   {
+       tlog_error(pstThread->pstLog, 0, 0, "tconnd_change_sessionkey: tdr_hton failed.\n");
+	return -1;
+   }
+
+   ((TPDUBASE*)pstThread->pszSendBuff)->bHeadLen	=	(unsigned char)stNet.iBuff;
+   
+   if(tconnd_sendto_lisinst(pstThread, pstInst, &stNet)<0)
+   {
+       tlog_error(pstThread->pstLog, 0, 0, "send change sessionkey Msg failed.\n");
+       return -1;
+   }
+   tlog_info(pstThread->pstLog, 0, 0, "new sessionkey =%s\n",pstInst->szEncKey);
+
+   return 0;   
+}
+
+int tconnd_reserve_connection(TCONNTHREAD* pstThread)
+{
+      TCONNINST    *pstInst;
+      int     iConnIdx = -1;
+      long  uin;
+      int iRet=0;
+	  
+      TFRAMEHEAD stFrameHead;
+
+     /*  if( PDULENPARSERID_BY_QQ!=pstThread->pstPDUInst->iLenParsertype )
+       {
+             return 0;
+       }*/
+	 
+       uin = pstThread->stFrameHead.stCmdData.stNotify.lUin;
+       iConnIdx = tconnd_alloc_inst(pstThread->pstPool);
+
+	if( iConnIdx <0  )
+	{
+            tlog_error(pstThread->pstLog, 0, 0, "tconnd_reserve_connection:pre allocate connection instance failed for uin =%d.\n",uin);
+            return -1;
+	}
+
+	pstInst		=	tconnd_get_inst(pstThread->pstPool, iConnIdx);
+
+	memset(pstInst, 0, offsetof(TCONNINST, szBuff));
+
+
+	//save pre allocated connection info for relay check
+	pstInst->iIdx = iConnIdx;
+	pstInst->iID = -1;
+	pstInst->s=-1;
+	pstInst->stAuthData.stAuthQQUnified.lUin = uin;
+
+	//for free use,set to first nettrans and lis
+	pstInst->tCreate	=	gs_tNow;
+	pstInst->tLastRecv	=	gs_tNow;
+	pstInst->iTransLoc = 0;
+	pstInst->iLisLoc = pstThread->pstConfInst->stTransInstList.astInsts[0].aiLisLoc[0];
+	
+
+	tconnd_randstr(pstInst->szIdent, TQQ_IDENT_LEN);
+
+	//generate connect key
+	tconnd_randstr(pstInst->szEncKey,TFRAMEHEAD_CONNECTKEY_LEN);
+
+	//
+	memset(&stFrameHead, 0, sizeof(stFrameHead) );
+	stFrameHead.chVer           = 0;
+	stFrameHead.chCmd         = TFRAMEHEAD_CMD_NOTIFY;
+	stFrameHead.chExtraType  = 0;
+	stFrameHead.chTimeStampType = 0;
+	stFrameHead.iID = pstInst->iID;
+	stFrameHead.iConnIdx = pstInst->iIdx;
+       stFrameHead.stCmdData.stNotify.lUin = uin;
+	memcpy(stFrameHead.stCmdData.stNotify.szConnKey,pstInst->szEncKey,TFRAMEHEAD_CONNECTKEY_LEN);
+	memcpy(stFrameHead.stCmdData.stNotify.szIdentity,pstInst->szIdent,sizeof(pstInst->szIdent));
+       tlog_info(pstThread->pstLog, 0, 0, "Notify Reponse:Uin=%d:POS=%d:Connectkey =%s:COnnectIdent=%s\n",uin,pstInst->iIdx,pstInst->szEncKey,pstInst->szIdent);
+	//	
+	//backward msg
+       iRet=tconnd_sendto_serinst_by_bus(pstThread, &stFrameHead, NULL, 0);
+	if( iRet <0)
+	{
+            tlog_error(pstThread->pstLog, 0, 0, "backward notify msg failed");
+	}
+	return 0;
+}
+
+int tconnd_notify_lisinst_close(TCONNTHREAD* pstThread, TCONNINST* pstInst,int iReason)
+{
+      TPDUHEAD stHead;
+      TDRDATA  stHost;
+      TDRDATA  stNet;
+      int iRet=0;
+      int iSend=0;
+      TCONNDRUN_CUMULATE* pstRunCum=NULL;
+      LISTENERRUN* pstLisRun=NULL;	  
+
+	//build stop pkg
+	tqqapi_init_base(&stHead.stBase);
+
+	stHead.stBase.bCmd=TPDU_CMD_STOP;
+	stHead.stExt.stStop.iStopReason=iReason;
+
+	//convert to net byte
+	stHost.pszBuff=&stHead;
+	stHost.iBuff=(int)sizeof(stHead);
+	stNet.pszBuff=pstThread->pszSendBuff;
+	stNet.iBuff=pstThread->iSendBuff;
+	
+	iRet=tdr_hton(pstThread->pstPDUInst->stLenParser.stQQParser.pstMetaHead,&stNet,&stHost,TPDU_VERSION);
+	if( iRet <0 )
+	{
+             tlog_error(pstThread->pstLog, 0, 0, "Notify cilent stop msg tdr_hton failed: errorstring=%s",tdr_error_string(iRet));
+             return -1;
+	}
+       ((TPDUBASE*)pstThread->pszSendBuff)->bHeadLen	=	stNet.iBuff;
+	   
+	//send msg
+	pstRunCum		=	(TCONNDRUN_CUMULATE *)pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+	pstLisRun		=	pstRunCum->stListenerRunList.astListeners + pstInst->iLisLoc;
+	if( pstInst->fStream )
+	{
+		iSend	= send(pstInst->s, stNet.pszBuff, stNet.iBuff, 0);
+	}
+	else
+	{
+		iSend	= sendto(pstInst->s, stNet.pszBuff, stNet.iBuff, 0, &pstInst->stAddr, sizeof(pstInst->stAddr));
+	}
+
+	if( iSend != stNet.iBuff )
+	{
+           tlog_error(pstThread->pstLog, 0, 0, "send stop msg to  cilent(%s:%d)  failed:Reason=%d, isend=%d,errorsting=%s",
+                    	                         inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr), 
+			                         NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),
+			                         iReason,
+		                                iSend,
+		   	                         strerror(errno)); 
+	    pstLisRun->stTransStat.llSendPkgFail++;
+	    pstLisRun->stTransStat.llSendByteFail +=	iSend;
+           return -1;        
+	}
+
+	pstLisRun->stTransStat.llSendPkgSucc++;
+	pstLisRun->stTransStat.llSendByteSucc +=	iSend;
+       tlog_info(pstThread->pstLog, 0, 0, "send stop msg to client(%s:%d) success:Reason=%d,datalen=%d",
+	   	                                                   inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr), 
+	   	                                                   NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),
+	   	                                                   iReason,
+	   	                                                   iSend);
+	return 0;
+
+}
+
+int tconnd_notify_lisinst_syn(TCONNTHREAD* pstThread, TCONNINST* pstInst)
+{
+      TPDUHEAD        stHead;
+      TDRDATA         stHost;
+      TPDUSYNINFO   stSynInfo;
+      TPDUSYNINFO   stTempInfo;
+      TDRDATA          stNet;
+      TCONNDRUN_CUMULATE* pstRunCum=NULL;
+      LISTENERRUN* pstLisRun=NULL;
+      int iRet=0;
+      int iSend=0; 
+      TCONND* pstConnd=NULL;	  
+      NETTRANS* pstNetTrans;
+      char *pEnc=NULL;
+       int     iEnc=0;
+
+      //build syn message
+      tqqapi_init_base(&stHead.stBase);
+      stHead.stBase.bCmd=TPDU_CMD_SYN;
+	  
+      pstConnd	=	(TCONND*)pstThread->pstAppCtx->stConfData.pszBuff;
+      pstNetTrans	= 	pstConnd->stNetTransList.astNetTrans + pstInst->iTransLoc;
+
+       /*生成握手凭证信息*/
+       memcpy(stSynInfo.szRandstr,pstInst->szIdent,TQQ_IDENT_LEN);	
+
+	stHost.pszBuff=(char *)&stSynInfo;
+	stHost.iBuff=(int)sizeof(stSynInfo);
+	stNet.pszBuff=(char *)&stTempInfo;
+	stNet.iBuff=(int)sizeof(stTempInfo);
+
+	iRet=tdr_hton(pstThread->pstPDUInst->stLenParser.stQQParser.pstMetaSyn, &stNet,&stHost, TPDU_VERSION);
+	if(iRet<0)
+	{
+              tlog_error(pstThread->pstLog, 0, 0, "Notify cilent syn msg tdr_hton synInfo failed:iRet=%d, errorstring=%s",iRet,tdr_error_string(iRet));
+		return iRet;	  
+	}
+
+	//Enc
+	pEnc=(char *)stHead.stExt.stSyn.szEncryptSynInfo;
+	iEnc=sizeof(stHead.stExt.stSyn.szEncryptSynInfo);
+	oi_symmetry_encrypt2((const char *)stNet.pszBuff, stNet.iBuff, (const char *) pstInst->szEncKey, pEnc, &iEnc);
+	stHead.stExt.stSyn.bLen=iEnc;
+
+	stHost.pszBuff=(char *)&stHead;
+	stHost.iBuff=(int)sizeof(stHead);
+	stNet.pszBuff=pstThread->pszSendBuff;
+	stNet.iBuff=pstThread->iSendBuff;
+	iRet=tdr_hton(pstThread->pstPDUInst->stLenParser.stQQParser.pstMetaHead, &stNet, &stHost, TPDU_VERSION);
+	if(iRet<0)
+	{
+            tlog_error(pstThread->pstLog, 0, 0, "Notify cilent syn msg tdr_hton head failed:iRet=%d, errorstring=%s",iRet,tdr_error_string(iRet));
+	     return iRet;		
+	}
+
+       ((TPDUBASE*)pstThread->pszSendBuff)->bHeadLen	=	stNet.iBuff;
+	   
+	   
+	//send msg
+	pstRunCum		=	(TCONNDRUN_CUMULATE *)pstThread->pstAppCtx->stRunDataCumu.pszBuff;
+	pstLisRun		=	pstRunCum->stListenerRunList.astListeners + pstInst->iLisLoc;
+	if( pstInst->fStream )
+	{
+		iSend	= send(pstInst->s, stNet.pszBuff, stNet.iBuff, 0);
+	}
+	else
+	{
+		iSend	= sendto(pstInst->s, stNet.pszBuff, stNet.iBuff, 0, &pstInst->stAddr, sizeof(pstInst->stAddr));
+	}
+
+	if( iSend != stNet.iBuff )
+	{
+           tlog_error(pstThread->pstLog, 0, 0, "tconnd send syn msg to  cilent(%s:%d)  failed: isend=%d,errorsting=%s",
+                    	                         inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr), 
+			                         NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),
+		                                iSend,
+		   	                         strerror(errno));
+		   
+	    pstLisRun->stTransStat.llSendPkgFail++;
+	    pstLisRun->stTransStat.llSendByteFail +=	iSend;
+           return -1;        
+	}
+
+	pstLisRun->stTransStat.llSendPkgSucc++;
+	pstLisRun->stTransStat.llSendByteSucc +=	iSend;
+       tlog_info(pstThread->pstLog, 0, 0, "tconnd send syn msg to client(%s:%d) success:datalen=%d", inet_ntoa(((struct sockaddr_in*)&pstInst->stAddr)->sin_addr), NTOHS(((struct sockaddr_in*)&pstInst->stAddr)->sin_port),iSend);
+	   	                                            
+	return 0;
+      
+}
+
+
+int tconnd_do_synack(TPDUHEAD* pstHead, TCONNTHREAD* pstThread,TCONNINST* pstInst)
+{
+      int iRet=0;
+      TPDUEXTSYNACK stTemp;
+      TPDUSYNINFO     stSynTemp;
+      char *pszDec=NULL;
+      int iDec;
+      TDRDATA stNet;
+      TDRDATA stHost;
+
+      
+      pszDec = (char *)stTemp.szEncryptSynInfo;
+      iDec = sizeof(stTemp.szEncryptSynInfo);
+      iRet = oi_symmetry_decrypt2(pstHead->stExt.stSynAck.szEncryptSynInfo,pstHead->stExt.stSynAck.bLen,pstInst->szEncKey, pszDec, &iDec);
+      if(!iRet )
+      {
+             tlog_error(pstThread->pstLog, 0, 0, "tconnd_do_synack:decrypt synack msg failed! MsgLen=%d,DecLen=%d\n",pstHead->stExt.stSynAck.bLen,iDec);  
+             return -1;
+      }
+
+      stNet.pszBuff=pszDec;
+      stNet.iBuff=iDec;
+      stHost.pszBuff=(char *)&stSynTemp;
+      stHost.iBuff=sizeof(stSynTemp);
+
+      iRet=tdr_ntoh(pstThread->pstPDUInst->stLenParser.stQQParser.pstMetaSyn, &stHost, &stNet,TPDU_VERSION);
+      if( 0 != iRet)
+      {
+           tlog_error(pstThread->pstLog, 0, 0, "tconnd_do_synack:tdr_ntoh synack msg failed! iRet=%d,errorstring=%s\n",iRet,tdr_error_string(iRet)); 
+           return iRet;
+      }
+
+      if(memcmp(stSynTemp.szRandstr, pstInst->szIdent, TQQ_IDENT_LEN))
+      {
+           tlog_error(pstThread->pstLog, 0, 0, "tconnd_do_synack:syn ident msg don't match ! uin=%d\n",pstInst->stAuthData.stAuthQQUnified.lUin); 
+           return -2;
+      }
+	  	
+      return 0;
+}
+
+int tconnd_adjust_recvtime(TCONNTHREAD* pstThread)
+{
+      int       iRecvInChannel = 0;
+      int       iSendInChannel = 0;  
+      TBUSADDR  iLocalAddr;
+	TBUSADDR iPeerAddr;  
+      int iRet=0;
+
+	iLocalAddr = pstThread->pstAppCtx->iId;
+	iPeerAddr = pstThread->iLastSrc;
+	
+      
+      if( iPeerAddr > 0 )
+      {
+          //recv data from tbus,get down channel data
+            iRet = tbus_get_channel_flux(pstThread->pstAppCtx->iBus, iLocalAddr,iPeerAddr, (int *)&iRecvInChannel, (int *)&iSendInChannel);
+		  
+	      if( 0 != iRet )
+	      {
+	           tlog_error(pstThread->pstLog, 0, 0, "tconnd_adjust_recvtime:fail to retrive channle data\n");
+		    return -1;        
+	      }
+      }
+     
+     
+
+      if( iRecvInChannel > pstThread->iWaitToSend)
+      {
+            /*上行允许时间减少一个时间片*/
+	     pstThread->iRecvSlices--;
+	    /* 至少不能少低于一个时间片  */
+	    if( pstThread->iRecvSlices < 1 )
+	    {
+               pstThread->iRecvSlices = 1;      
+	    }
+      }
+      else if( iRecvInChannel < pstThread->iWaitToSend)
+      {
+           pstThread->iRecvSlices++;
+	      
+	    if( pstThread->iRecvSlices > Time_Slice_Count/2 )
+	    {
+               pstThread->iRecvSlices= Time_Slice_Count/2;
+	    }
+      }
+
+      return 0;
+
+}
+
+
+/*onidle:修改epoll wait 时间并sleep一会*/
+int tconnd_proc_idle(TAPPCTX* pstAppCtx, TCONNENV* pstEnv)
+{
+
+      pstAppCtx->iEpollWait = TCONND_WAIT_TIME;
+      usleep(pstAppCtx->iIdleSleep*1000);
+      return 0;
+
+}
+
+
+

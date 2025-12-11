@@ -1,0 +1,19 @@
+tdr.o: tdr.c tgetopt.h /data/hardway/06/tsf4g/include/tdr/tdr.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_external.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_types.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_define.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_ctypes_info.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_error.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_metalib_init.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_types.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_define.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_XMLtags.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_XMLMetaLib.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_metalib_to_hpp.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_data_io.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_data_sort.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_net.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_operate_data.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_metalib_manage.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_sql.h \
+  /data/hardway/06/tsf4g/include/tdr/tdr_meta_entries_index.h tdr_tools.h

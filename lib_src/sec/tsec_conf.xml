@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!-- This file is for tsf4g-tsec module -->
+
+<TsecConf>
+  <FuncFile>/home/huwu/tsf4g/src/sec/tsec_func.ini</FuncFile>
+</TsecConf>
+

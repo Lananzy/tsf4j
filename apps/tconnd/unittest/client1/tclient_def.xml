@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<metalib tagsetversion="1" name="client_def" version="10" >
+  
+  <macro name="SEVER_URL_MAX_LEN" value="64" />
+  <macro name="SEVER_KEY_LEN" value="32" />
+
+	<struct name="client_def" version="10" >
+		<entry name="GameSvrUrl" type="string" size="SEVER_URL_MAX_LEN" />
+		<entry name="Uin" type="int" />
+    <entry name="SvrKey" type="string" size="SEVER_KEY_LEN"  defaultvalue="aaaabbbbccccdddd" />
+    <entry name="AuthType" type="int" defaultvalue="3"  />
+	</struct>
+		
+</metalib>

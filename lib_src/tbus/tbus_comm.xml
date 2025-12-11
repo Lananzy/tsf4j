@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="gb2312"?>
+
+<metalib tagsetversion="1" name="" version="2">
+
+
+  <macro name="TBUS_MAX_DESC_STRING_LEN" value="128" desc="max length of discription" />
+  <macro name="TBUS_CHANNEL_SIDE_NUM" value="2" desc="tbus通道有两端" />
+
+  <macro name="TBUS_DEFAUL_BUSSINESS_ID" value="0" desc="缺省业务ID" />
+
+  <macro name="TBUS_CHANNEL_DEFAULT_SIZE" value="2048000" desc="default size of tbus channel"/>
+
+  <macro name="TBUS_CHANNEL_DEFAULT_PRIORITY" value="8" />
+  <macro name="TBUS_RELAY_URL_STRATEGY" value="1" />
+
+  <macro name="TBUS_DEFAULT_CHANNEL_DATA_ALIGN" value="8" desc="数据存储时缺省字节对齐方式"/>
+  <macro name="TBUS_MAX_CHANNEL_DATA_ALIGN" value="256" desc="数据存储时最大字节对齐值"/>
+
+  <struct name="ChannelCnf" version="1" >
+    <entry name="Priority"    type="uint" defaultvalue="TBUS_CHANNEL_DEFAULT_PRIORITY" />
+    <entry name="AddressCount"  type="uint"  />
+    <entry name="Address"      type="string" size="TBUS_MAX_ADDR_STRING_LEN"
+           count="TBUS_CHANNEL_SIDE_NUM" refer="AddressCount"  desc="two channel address" />
+    <entry name="InterAddr"  type="int" count="TBUS_CHANNEL_SIDE_NUM" io="noio" />
+    <entry name="RecvSize"      type="uint"   defaultvalue="TBUS_CHANNEL_DEFAULT_SIZE"
+           desc="size of recv queue for msg exchange in bytes from the viewer with first address, default is 2M" />
+    <entry name="SendSize"      type="uint"   defaultvalue="TBUS_CHANNEL_DEFAULT_SIZE"
+           desc="size of send queue for msg exchange in bytes from the viewer with first address, default is 2M" />
+    <entry name="Desc"        type="string" size="TBUS_MAX_DESC_STRING_LEN" />
+  </struct>
+
+  <struct name="ChannelCnfInter" version="1" >
+    <entry name="Priority"    type="uint" defaultvalue="TBUS_CHANNEL_DEFAULT_PRIORITY" />
+    <entry name="Address"  type="int" count="TBUS_CHANNEL_SIDE_NUM" desc="two channel address" />
+    <entry name="RecvSize"      type="uint"   defaultvalue="TBUS_CHANNEL_DEFAULT_SIZE"
+           desc="size of recv queue for msg exchange in bytes from the viewer with first address, default is 2M" />
+    <entry name="SendSize"      type="uint"   defaultvalue="TBUS_CHANNEL_DEFAULT_SIZE"
+           desc="size of send queue for msg exchange in bytes from the viewer with first address, default is 2M" />
+  </struct>
+
+
+  <struct name="ShmRelay" version="1"  >
+    <entry name="Enable"   type="uint"   defaultvalue="1" desc="bit set: 0001 -- relay node valid" />
+    <entry name="Addr"     type="string" size="TBUS_MAX_ADDR_STRING_LEN" desc="ip format: xxx.xxx.xxx.xxx, primary key, should be unique in share memory. Message sent to this addr would be forwarded via network" />
+    <entry name="Priority" type="uint" />
+    <entry name="MConn"    type="string" size="TBUS_MAX_HOST_URL_LEN" desc="master connection information"  />
+    <entry name="SConn"    type="string" defaultvalue="" size="TBUS_MAX_HOST_URL_LEN" desc="slave connection information" />
+    <entry name="Strategy" type="uint"   defaultvalue="TBUS_RELAY_URL_STRATEGY" desc="strategy between master connection and slave connection" />
+    <entry name="Desc"     type="string" size="TBUS_MAX_DESC_STRING_LEN" />
+  </struct>
+
+  <struct name="RelayCnfInter" version="1"  >
+    <entry name="Address"  type="int" desc="channel address should be relay" />
+    <entry name="MConn"    type="string" size="TBUS_MAX_HOST_URL_LEN" desc="master connection information"  />    
+  </struct>
+  
+
+</metalib>

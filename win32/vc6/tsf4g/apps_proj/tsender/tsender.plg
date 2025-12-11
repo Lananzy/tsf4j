@@ -1,0 +1,43 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: tsender - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\STEVE~1.TEN\LOCALS~1\Temp\RSP102.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"../../../../../tsf4g_output\apps\tsender/tsender.pch" /YX /Fo"../../../../../tsf4g_output\apps\tsender/" /Fd"../../../../../tsf4g_output\apps\tsender/" /FD /GZ /c 
+"E:\TSF4GCOPY\TSF4G\apps\tsender\tapp.c"
+"E:\TSF4GCOPY\TSF4G\apps\tsender\tsender.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\STEVE~1.TEN\LOCALS~1\Temp\RSP102.tmp" 
+Creating temporary file "C:\DOCUME~1\STEVE~1.TEN\LOCALS~1\Temp\RSP103.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib ws2_32.lib winmm.lib /nologo /subsystem:console /incremental:yes /pdb:"../debug/tsender.pdb" /debug /machine:I386 /out:"../debug/tsender.exe" /pdbtype:sept 
+\TSF4GCOPY\tsf4g_output\apps\tsender\tapp.obj
+\TSF4GCOPY\tsf4g_output\apps\tsender\tsender.obj
+\TSF4GCOPY\TSF4G\WIN32\VC6\tsf4g\libobus\Debug\libobus.lib
+\TSF4GCOPY\TSF4G\lib\libpal.lib
+\TSF4GCOPY\TSF4G\lib\libtdr_d.lib
+\TSF4GCOPY\TSF4G\lib\libtdr_xml_d.lib
+\TSF4GCOPY\TSF4G\lib\libexpat_d.lib
+]
+Creating command line "link.exe @C:\DOCUME~1\STEVE~1.TEN\LOCALS~1\Temp\RSP103.tmp"
+<h3>Output Window</h3>
+Compiling...
+tapp.c
+tsender.c
+e:\tsf4gcopy\tsf4g\apps\tsender\tsender.c(41) : warning C4101: 's' : unreferenced local variable
+e:\tsf4gcopy\tsf4g\apps\tsender\tsender.c(40) : warning C4101: 'i' : unreferenced local variable
+e:\tsf4gcopy\tsf4g\apps\tsender\tsender.c(146) : warning C4101: 'iSend' : unreferenced local variable
+Linking...
+
+
+
+<h3>Results</h3>
+tsender.exe - 0 error(s), 3 warning(s)
+</pre>
+</body>
+</html>

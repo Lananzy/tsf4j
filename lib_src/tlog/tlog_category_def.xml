@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macro name="TLOG_NAME_LEN" value="64" />
+<macro name="TLOG_FORMAT_LEN" value="128" />
+
+<struct name="TLOGCategory" version="1" >
+	<entry name="Name" type="string" size="TLOG_NAME_LEN" />
+	<entry name="PriorityHigh" type="int" bindmacrosgroup="TLOG_PRIORITY" defaultvalue="TLOG_PRIORITY_NULL" />
+	<entry name="PriorityLow" type="int" bindmacrosgroup="TLOG_PRIORITY" defaultvalue="TLOG_PRIORITY_NULL" />
+	<entry name="LevelDispatch" type="int" />
+	<entry name="MustSucc" type="int" />
+	<entry name="MaxMsgSize" type="int" />
+	<entry name="Format" type="string" size="TLOG_FORMAT_LEN" />
+	<entry name="ForwardCat" type="string" size="TLOG_FORMAT_LEN" />
+	<entry name="Device" type="TLOGDevAny" />
+</struct>
+
+</metalib>
+

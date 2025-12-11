@@ -1,0 +1,9 @@
+<tconnd version="10">
+	<tconndkeymgr>
+		<LogLevel>700</LogLevel>
+		<CenterdAddr>0.0.0.1</CenterdAddr>
+		<TconndMgrAddr>0.0.0.4</TconndMgrAddr>
+		<BindAddr>10.1.44.60</BindAddr>
+		<BindPort>8921</BindPort>
+	</tconndkeymgr>
+</tconnd>

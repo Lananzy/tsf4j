@@ -1,0 +1,43 @@
+<tconnd version="2147483647">
+    <Threading> 0</Threading>
+    <MaxFD> 10240</MaxFD>  
+    
+    <PDUList type="PDUList">
+         <PDUs type="PDU">
+            <Name>default </Name>
+            <UpSize>1024</UpSize>
+            <DownSize>0</DownSize>
+            <LenParsertype>BY_NULL</LenParsertype>
+        </PDUs>
+    </PDUList>
+    
+   <ListenerList type="ListenerList">
+         <Listeners type="Listener">
+            <Name>default</Name>
+            <Url>tcp://10.1.44.60:9010</Url>  
+            <SendBuff> 655360 </SendBuff>
+						<RecvBuff> 655360 </RecvBuff>                    
+        </Listeners>
+    </ListenerList>
+    
+    <SerializerList type="SerializerList">
+        <Serializers type="Serializer">
+            <Name>default</Name>
+            <Url>1.2.33.21</Url>            
+        </Serializers>
+    </SerializerList>
+    
+    <NetTransList type="NetTransList">
+        <NetTrans type="NetTrans">
+            <Name>default</Name>
+            <PDU>default</PDU>
+            <Listener>default</Listener>
+            <Serializer>default</Serializer>
+            <ConnLimit type="ConnLimit">
+             <MaxConn>10240</MaxConn>
+		         <Permit>0</Permit>
+		         <Speed>0</Speed>
+            </ConnLimit>
+        </NetTrans>
+    </NetTransList>
+</tconnd>

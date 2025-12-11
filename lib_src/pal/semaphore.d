@@ -1,0 +1,1 @@
+semaphore.o: semaphore.c

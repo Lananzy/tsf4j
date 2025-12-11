@@ -1,0 +1,11 @@
+<logdumpconf version="10">
+	<LogPath>./log</LogPath>
+	<Filter></Filter>
+	<DumpFlag>1</DumpFlag>
+	<DumpDst>
+		<DumpStdout>
+			<MetaLibPath>./test_logdump/logic_log.tdr</MetaLibPath>
+			<MetaName>logic_log</MetaName>
+		</DumpStdout>
+	</DumpDst>
+</logdumpconf>	

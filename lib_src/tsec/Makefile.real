@@ -1,0 +1,41 @@
+# @file $RCSfile: Makefile.real,v $
+#  general description of this module
+#  $Id: Makefile.real,v 1.2 2008/12/09 03:29:37 hardway Exp $
+#  @author $Author: hardway $
+#  @date $Date: 2008/12/09 03:29:37 $
+#  @version 1.0
+#  @note Editor: Vim 6.1, Gcc 4.0.2, tab=4
+#  @note Platform: Linux
+
+include ../../tsf4g.mk
+
+LIB_CFILE=$(wildcard *.c)
+LIB_OBJ=$(LIB_CFILE:.c=.o)
+LIB_LIB=$(TSF4G_LIB)/libtsec.a
+LIB_SO=$(TSF4G_LIB)/libtsec.so
+
+.PHONY: all clean
+
+all: $(LIB_LIB) $(LIB_SO)
+	cp $(LIB_OBJ)  $(TSF4G_PACKLIBDIR)
+
+-include $(LIB_CFILE:.c=.d)
+
+%.d: %.c
+	$(CC) -MM $(CFLAGS) $< -o $@
+
+%.o: %.c %.d
+	$(CC) -c $(CFLAGS)  $<
+
+$(LIB_LIB):	$(LIB_OBJ)
+	ar r $(LIB_LIB) $^
+	
+
+$(LIB_SO): $(LIB_OBJ)
+	$(CC) -o $(LIB_SO) $(SHARED) $(CFLAGS) $(TSF4G_LIB)/libpal.a $^
+
+clean:
+	$(RM) *.o  *.d
+	$(RM) $(LIB_LIB)
+	$(RM) $(LIB_SO)
+

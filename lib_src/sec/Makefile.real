@@ -1,0 +1,65 @@
+#  @file $RCSfile: Makefile.real,v $
+#    Makefile for tsf4g-security module
+#    $Id: Makefile.real,v 1.1.1.1 2008/05/28 07:35:00 kent Exp $
+#  @author $Author: kent $
+#  @date $Date: 2008/05/28 07:35:00 $
+#  @version 1.0
+#  @note Editor: Vim 6.3, Gcc 4.0.2, tab=4
+#  @note Platform: Linux
+
+
+include ../../tsf4g.mk
+
+LOG_LIB= -ltlog
+LIBS  += $(LOG_LIB)
+
+CFLAGS += -export-dynamic
+
+ifeq ($(version), 1)
+CFLAGS +=
+endif
+
+TSEC_OBJECTS = tsec.o tsec_init.o tsec_conf_desc.o tsec_comm.o
+TSEC_SO=$(TSF4G_LIB)/libtsec.so
+TSEC_CRYPTO_SO=$(TSF4G_LIB)/libtsec_crypto.so
+TSEC_HASH_SO=$(TSF4G_LIB)/libtsec_hash.so
+TSEC_ACRYPTO_SO=$(TSF4G_LIB)/libtsec_acrypto.so
+TSEC_IP_SO=$(TSF4G_LIB)/libtsec_ip.so
+
+CREATESO = $(CC) $(SHARED) $(LDPATH) -z defs -o $@ $^
+
+.SUFFIXES: .c .o .a
+
+TARGETS = \
+	$(TSEC_SO) \
+	$(TSEC_CRYPTO_SO) \
+	$(TSEC_HASH_SO) \
+	$(TSEC_ACRYPTO_SO) \
+	$(TSEC_IP_SO) \
+
+all: $(TARGETS)
+	cp $(TSEC_OBJECTS)  $(TSF4G_PACKLIBDIR)
+
+$(TSEC_SO): $(TSEC_OBJECTS)
+	$(CREATESO) $(LIBS)  -ltdr_xml
+	
+
+$(TSEC_CRYPTO_SO): tsec_encrypted.o tsec_comm.o
+	$(CREATESO) $(LIBS) -lcrypto
+	
+
+$(TSEC_HASH_SO): tsec_hash.o tsec_comm.o
+	$(CREATESO) $(LIBS) -lcrypto
+	
+
+$(TSEC_ACRYPTO_SO): tsec_acrypto.o tsec_comm.o
+	$(CREATESO) $(LIBS) -lcrypto -lpal
+	
+
+$(TSEC_IP_SO): tsec_ip.o tsec_comm.o tsec_ipacl_desc.o
+	$(CREATESO) $(LIBS) -ltdr_xml
+	
+#------------------------------------------------------
+clean:
+	$(RM) *.o $(TARGETS) core *.log*
+

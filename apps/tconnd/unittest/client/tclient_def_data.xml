@@ -1,0 +1,6 @@
+<client_def version="10">
+	  <GameSvrUrl>172.25.40.97:9061 </GameSvrUrl>
+	  <Uin>9999</Uin>
+    <SvrKey>aaaabbbbccccdddd</SvrKey>
+    <AuthType>3</AuthType>
+</client_def>

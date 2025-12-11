@@ -1,0 +1,43 @@
+#  @file $RCSfile: Makefile.real,v $
+#  general description of this module
+#  $Id: Makefile.real,v 1.1 2009/01/21 08:06:16 kent Exp $
+#  @author $Author: kent $
+#  @date $Date: 2009/01/21 08:06:16 $
+#  @version $Revision: 1.1 $
+#  @note Editor: Vim 6.1, Gcc 4.0.1, tab=4
+#  @note Platform: Linux
+#
+
+include ../../tsf4g.mk
+
+APP_NAME=logdump
+
+APP_FLAGS=$(CFLAGS)
+APP_CFILE=$(wildcard *.c)
+APP_OBJ=$(APP_CFILE:.c=.o)
+APP_EXE=$(APP_NAME)
+
+APP_IMPORT_LIBS= $(LDPATH) $(TSF4G_LIB)/libtapp.a $(TSF4G_LIB)/libtcltapi.a $(TSF4G_LIB)/libtsec.a $(TSF4G_LIB)/libtloghelp.a $(TSF4G_LIB)/libtmng.a \
+	  $(TSF4G_LIB)/libtbus.a  $(TSF4G_LIB)/libtconnapi.a $(TSF4G_LIB)/libtlog.a $(TSF4G_LIB)/libtdr_xml.a \
+	$(TSF4G_LIB)/libtagentapi.a $(TSF4G_LIB)/libpal.a $(TSF4G_LIB)/libcomm.a -Wl,-Bstatic -lscew -lexpat -Wl,-Bdynamic  -lpthread
+
+.PHONY: all clean
+
+all: $(APP_EXE)
+
+-include $(APP_CFILE:.c=.d)
+
+%.d: %.c
+	$(CC) -MM $(APP_FLAGS) $< -o $@
+
+%.o: %.c %.d
+	$(CC) -c $(APP_FLAGS) $<
+
+$(APP_EXE): $(APP_OBJ)
+	$(CC)  -o $(APP_EXE) $(APP_FLAGS)  $^ $(APP_IMPORT_LIBS) 
+	
+clean:
+	$(RM) *.o  *.d
+	$(RM) $(APP_EXE)
+	$(RM) gmon.out
+

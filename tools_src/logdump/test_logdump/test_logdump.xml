@@ -1,0 +1,3 @@
+<test_logdumpconf version="10">
+	<OpLogCfg>./op_log.xml</OpLogCfg>
+</test_logdumpconf>	
