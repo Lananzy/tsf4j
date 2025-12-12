@@ -665,85 +665,127 @@ int tdr_create_lib_multifile(INOUT LPTDRMETALIB *a_ppstLib, IN const char* a_asz
     return iRet;
 }
 
+// 在函数开头添加日志文件处理逻辑
 int tdr_add_meta(INOUT LPTDRMETALIB a_pstLib, IN const char* a_pszXml, IN int a_iXml, IN int a_iXMLTagVersion, IN FILE* a_fpError)
 {
-    int iRet = TDR_SUCCESS;
-    scew_tree* pstTree = NULL;
-    TDRLIBPARAM stLibParam;
-    
-    /*assert(NULL != a_pstLib);
-    assert(NULL != a_pszXml);
-    assert(0 < a_iXml);
-    assert(NULL != a_fpError);  */
-	if ((NULL == a_pstLib)||(NULL == a_pszXml)||(0 >= a_iXml))
+	int iRet = TDR_SUCCESS;
+	scew_tree* pstTree = NULL;
+	TDRLIBPARAM stLibParam;
+	int iInitialMetaCount = a_pstLib->iCurMetaNum;
+	FILE* logFile = NULL; // 日志文件句柄
+
+	// 处理日志文件：不存在则创建，存在则追加
+	logFile = fopen("tdr_meta_load.log", "a+");
+	if (logFile == NULL) {
+		// 若创建日志文件失败，降级使用原错误输出句柄
+		logFile = (a_fpError != NULL) ? a_fpError : stdout;
+		fprintf(logFile, "[tdr_add_meta] 警告：无法创建日志文件，将日志输出到默认位置\n");
+	}
+
+	// 替换原有 a_fpError 为日志文件句柄（确保所有日志写入文件）
+	if (a_fpError == NULL) {
+		a_fpError = logFile;
+	}
+
+	// 以下为原有逻辑，日志输出均使用 a_fpError（已指向日志文件）
+	if ((NULL == a_pstLib) || (NULL == a_pszXml) || (0 >= a_iXml))
 	{
+		fprintf(a_fpError, "[tdr_add_meta] 错误：无效参数（lib=%p, xml=%p, xml_len=%d）\n",
+			a_pstLib, a_pszXml, a_iXml);
+		fclose(logFile); // 关闭日志文件
 		return TDR_ERRIMPLE_INVALID_PARAM;
 	}
-	if (NULL == a_fpError)
+
+	fprintf(a_fpError, "[tdr_add_meta] 开始处理XML数据，长度：%d字节，标签版本：%d\n",
+		a_iXml, a_iXMLTagVersion);
+
+	/*创建XML元素树*/
+	fprintf(a_fpError, "[tdr_add_meta] 解析XML内容，生成元素树...\n");
+	iRet = tdr_create_XMLParser_tree_byBuff_i(&pstTree, a_pszXml, a_iXml, a_fpError);
+	if (TDR_ERR_IS_ERROR(iRet))
 	{
-		a_fpError = stdout;
+		fprintf(a_fpError, "[tdr_add_meta] 错误：XML解析失败，返回码：%d\n", iRet);
+		fclose(logFile); // 关闭日志文件
+		return iRet;
 	}
-    
-    
-    /*创建XML元素树*/
-    iRet = tdr_create_XMLParser_tree_byBuff_i(&pstTree, a_pszXml, a_iXml, a_fpError);   
-    
-    
-    /*获取创建元数据库所需的参数*/
-    if (!TDR_ERR_IS_ERROR(iRet))
-    {
-        tdr_init_lib_param_i(&stLibParam);
-        TDR_STRNCPY(stLibParam.szName, a_pstLib->szName, sizeof(stLibParam.szName));
-        iRet = tdr_add_lib_param_i(&stLibParam, pstTree, a_iXMLTagVersion, a_fpError);
-    }
+	if (NULL == pstTree)
+	{
+		fprintf(a_fpError, "[tdr_add_meta] 错误：解析后元素树为空\n");
+		fclose(logFile); // 关闭日志文件
+		return TDR_ERRIMPLE_INVALID_PARAM;
+	}
 
-    /*检查空间*/
-    if ((a_pstLib->iMaxMacroNum - a_pstLib->iCurMacroNum) < stLibParam.iMaxMacros)
-    {
-        fprintf(a_fpError, "\nerror: 元素数据库最多能存储%d个宏定义，目前已经存取了%d个定义,不能再加入%d个宏定义，请确定metalib初始化时分配了足够的空间\n",
-            a_pstLib->iMaxMacroNum, a_pstLib->iCurMacroNum, stLibParam.iMaxMacros);
-        iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
-    }
-    if (!TDR_ERR_IS_ERROR(iRet))
-    {
-        if ((a_pstLib->iMaxMetaNum - a_pstLib->iCurMetaNum) < stLibParam.iMaxMetas)
-        {
-            fprintf(a_fpError, "error: 元素数据库最多能存储%d个自定义类型，目前已经存取了%d个,不能再加入%d个，请确定metalib初始化时分配了足够的空间\n",
-                a_pstLib->iMaxMetaNum, a_pstLib->iCurMetaNum, stLibParam.iMaxMetas);
-            iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
-        }
-    }
-    if (!TDR_ERR_IS_ERROR(iRet))
-    {
-        if (TDR_GET_FREE_META_SPACE(a_pstLib) < stLibParam.iMetaSize)
-        {
-            fprintf(a_fpError, "error: 元素数据库存储自定义类型的剩余空间为%d字节，目前实际需要%d字节，请确定metalib初始化时分配了足够的空间\n",
-                TDR_GET_FREE_META_SPACE(a_pstLib), stLibParam.iMetaSize);
-            iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
-        }
-    }
-    if (!TDR_ERR_IS_ERROR(iRet))
-    {
-        if (a_pstLib->iFreeStrBufSize < stLibParam.iStrBufSize)
-        {
-            fprintf(a_fpError, "error: 元素数据库剩余空间字符串缓冲区为%d字节，目前实际需要%d字节，请确定metalib初始化时分配了足够的空间\n",
-                a_pstLib->iFreeStrBufSize, stLibParam.iStrBufSize);
-            iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
-        }
-    }
+	/*获取创建元数据库所需的参数*/
+	if (!TDR_ERR_IS_ERROR(iRet))
+	{
+		tdr_init_lib_param_i(&stLibParam);
+		TDR_STRNCPY(stLibParam.szName, a_pstLib->szName, sizeof(stLibParam.szName));
+		fprintf(a_fpError, "[tdr_add_meta] 解析XML中的元数据参数（预检查）...\n");
+		iRet = tdr_add_lib_param_i(&stLibParam, pstTree, a_iXMLTagVersion, a_fpError);
+		if (TDR_ERR_IS_ERROR(iRet))
+		{
+			fprintf(a_fpError, "[tdr_add_meta] 错误：获取元数据参数失败，返回码：%d\n", iRet);
+			scew_tree_free(pstTree);
+			fclose(logFile); // 关闭日志文件
+			return iRet;
+		}
+		fprintf(a_fpError, "[tdr_add_meta] 预检查结果：预计新增宏数量=%d，预计新增自定义类型数量=%d，所需空间=%d字节\n",
+			stLibParam.iMaxMacros, stLibParam.iMaxMetas, stLibParam.iMetaSize);
+	}
 
+	/*检查空间*/
+	if ((a_pstLib->iMaxMacroNum - a_pstLib->iCurMacroNum) < stLibParam.iMaxMacros)
+	{
+		fprintf(a_fpError, "[tdr_add_meta] 错误：宏定义空间不足，最大%d，已用%d，需新增%d\n",
+			a_pstLib->iMaxMacroNum, a_pstLib->iCurMacroNum, stLibParam.iMaxMacros);
+		iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
+	}
+	if (!TDR_ERR_IS_ERROR(iRet) && ((a_pstLib->iMaxMetaNum - a_pstLib->iCurMetaNum) < stLibParam.iMaxMetas))
+	{
+		fprintf(a_fpError, "[tdr_add_meta] 错误：自定义类型空间不足，最大%d，已用%d，需新增%d\n",
+			a_pstLib->iMaxMetaNum, a_pstLib->iCurMetaNum, stLibParam.iMaxMetas);
+		iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
+	}
+	if (!TDR_ERR_IS_ERROR(iRet) && (TDR_GET_FREE_META_SPACE(a_pstLib) < stLibParam.iMetaSize))
+	{
+		fprintf(a_fpError, "[tdr_add_meta] 错误：自定义类型存储空间不足，剩余%d，需%d\n",
+			TDR_GET_FREE_META_SPACE(a_pstLib), stLibParam.iMetaSize);
+		iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
+	}
+	if (!TDR_ERR_IS_ERROR(iRet) && (a_pstLib->iFreeStrBufSize < stLibParam.iStrBufSize))
+	{
+		fprintf(a_fpError, "[tdr_add_meta] 错误：字符串缓冲区不足，剩余%d，需%d\n",
+			a_pstLib->iFreeStrBufSize, stLibParam.iStrBufSize);
+		iRet = TDR_ERRIMPLE_INVALID_METALIB_PARAM;
+	}
 
-    /*将XML元素树中的信息加到metalib中*/
-    if (!TDR_ERR_IS_ERROR(iRet))
-    {
-        a_pstLib->iXMLTagSetVer = stLibParam.iTagSetVersion;
-        iRet = tdr_add_matalib_i(a_pstLib, pstTree, a_fpError);   
-    }      
-    
-    /*释放资源*/    
-    scew_tree_free( pstTree );    
-    
-    return iRet;   
+	/*将XML元素树中的信息加到metalib中*/
+	if (!TDR_ERR_IS_ERROR(iRet))
+	{
+		a_pstLib->iXMLTagSetVer = stLibParam.iTagSetVersion;
+		fprintf(a_fpError, "[tdr_add_meta] 开始加载自定义类型到元数据库（当前已加载：%d个）...\n",
+			a_pstLib->iCurMetaNum);
+		iRet = tdr_add_matalib_i(a_pstLib, pstTree, a_fpError);
+		if (TDR_ERR_IS_ERROR(iRet))
+		{
+			fprintf(a_fpError, "[tdr_add_meta] 错误：加载自定义类型失败，返回码：%d\n", iRet);
+			scew_tree_free(pstTree);
+			fclose(logFile); // 关闭日志文件
+			return iRet;
+		}
+		// 计算实际新增的自定义类型数量
+		int iAddedMetaCount = a_pstLib->iCurMetaNum - iInitialMetaCount;
+		fprintf(a_fpError, "[tdr_add_meta] 自定义类型加载完成，新增：%d个，当前总数量：%d个\n",
+			iAddedMetaCount, a_pstLib->iCurMetaNum);
+	}
+
+	/*释放资源*/
+	scew_tree_free(pstTree);
+	fprintf(a_fpError, "[tdr_add_meta] 处理结束，返回码：%d\n", iRet);
+
+	// 关闭日志文件
+	fclose(logFile);
+	return iRet;
 }
 
 int tdr_add_meta_file(INOUT LPTDRMETALIB a_pstLib, IN const char* a_pszFileName, IN int a_iXMLTagVersion, IN FILE* a_fpError)

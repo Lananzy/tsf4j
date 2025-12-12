@@ -57,7 +57,7 @@ typedef enum tagBoolean
         
 #define	TDR_MAX_VERSION		0x7fffffff		/**< 元数据库最大版本号*/
 
-#define TDR_NAME_LEN		32		/**< 元数据名字串最大字节数*/
+#define TDR_NAME_LEN		128		/**< 元数据名字串最大字节数*/
 #define TDR_DESC_LEN		1024		/**< 元数据描述串最大字节数*/
 #define TDR_MACRO_LEN	64		/**< 元数据宏定义名字串最大字节数*/
 #define TDR_CHNAME_LEN	512		/**< 元数据中文名串最大字节数*/

@@ -1470,126 +1470,222 @@ LPTDRMETAENTRY tdr_get_entry_by_id_i(TDRMETAENTRY pstEntry[], int iMax, int iID)
     return (i < iMax) ? &pstEntry[i] : NULL;
 }
 
-int tdr_get_entry_type_i(LPTDRMETAENTRY a_pstEntry, LPTDRMETA a_pstMeta, scew_element *a_pstElement, FILE *a_fpError)
+int tdr_get_entry_type_i(LPTDRMETAENTRY a_pstEntry, LPTDRMETA a_pstMeta, scew_element* a_pstElement, FILE* a_fpError)
 {
-    scew_attribute *pstAttr = NULL;
-    LPTDRMETALIB pstLib =NULL;
-    const char *pszType = NULL;
+    scew_attribute* pstAttr = NULL;
+    LPTDRMETALIB pstLib = NULL;
+    const char* pszType = NULL;
     int idx = TDR_INVALID_INDEX;
     LPTDRCTYPEINFO pstTypeInfo = NULL;
     int iRet = TDR_SUCCESS;
-    char szType[1024] = {0};
+    char szType[1024] = { 0 };
+    // 打开日志文件（追加模式，不存在则创建）
+    FILE* fpLog = fopen("tdr_type_parse.log", "a+");
+    if (fpLog) {
+        fprintf(fpLog, "[%s] 开始处理类型解析 - 自定义类型: %s, 成员元素: %s\n",
+            __func__, a_pstMeta->szName, a_pstEntry->szName);
+    }
 
     assert(NULL != a_pstElement);
     assert(NULL != a_pstEntry);
     assert(NULL != a_pstMeta);
     assert(NULL != a_fpError);
 
-
     pstLib = TDR_META_TO_LIB(a_pstMeta);
+    if (fpLog) {
+        fprintf(fpLog, "[%s] 获取元数据所属库，库版本: XMLTagSetVer=%d\n",
+            __func__, pstLib->iXMLTagSetVer);
+    }
 
     /* type attribute must be exist. */
-    pstAttr = scew_attribute_by_name(a_pstElement, TDR_TAG_TYPE);    
-    if( NULL == pstAttr )
+    pstAttr = scew_attribute_by_name(a_pstElement, TDR_TAG_TYPE);
+    if (NULL == pstAttr)
     {
         fprintf(a_fpError, "error:\t 自定义类型<name = %s>的成员元素<name = %s>没有包含type属性.\n",
             a_pstMeta->szName, a_pstEntry->szName);
-        
+        if (fpLog) {
+            fprintf(fpLog, "[%s] 错误: 未找到type属性，返回码: %d\n",
+                __func__, TDR_ERRIMPLE_ENTRY_NO_TYPE);
+            fclose(fpLog);
+        }
         return TDR_ERRIMPLE_ENTRY_NO_TYPE;
+    }
+    if (fpLog) {
+        fprintf(fpLog, "[%s] 成功获取type属性，原始值: %s\n",
+            __func__, scew_attribute_value(pstAttr));
     }
 
     tdr_normalize_string(&szType[0], sizeof(szType), scew_attribute_value(pstAttr));
     pszType = &szType[0];
+    if (fpLog) {
+        fprintf(fpLog, "[%s] 规范化type值: 原始='%s' -> 规范化后='%s'\n",
+            __func__, scew_attribute_value(pstAttr), szType);
+    }
+
     if (*pszType == '\0')
     {
         fprintf(a_fpError, "error:\t 结构<name = %s>的成员元素<name = %s>的type属性不能为空串.\n",
             a_pstMeta->szName, a_pstEntry->szName);
-        
+        if (fpLog) {
+            fprintf(fpLog, "[%s] 错误: type属性规范化后为空串，返回码: %d\n",
+                __func__, TDR_ERRIMPLE_ENTRY_NO_TYPE);
+            fclose(fpLog);
+        }
         return TDR_ERRIMPLE_ENTRY_NO_TYPE;
     }
-
 
     /*tagsetversion1支持指针和引用*/
     if (TDR_XML_TAGSET_VERSION_0 < pstLib->iXMLTagSetVer)
     {
+        if (fpLog) {
+            fprintf(fpLog, "[%s] 库版本支持指针/引用类型，检查类型前缀\n", __func__);
+        }
         if (TDR_TAG_POINTER_TYPE == *pszType)
         {
-			TDR_ENTRY_SET_POINT_TYPE(a_pstEntry);
+            TDR_ENTRY_SET_POINT_TYPE(a_pstEntry);
             pszType++;
-        }else if (TDR_TAG_REFER_TYPE == *pszType)
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 识别为指针类型，处理后类型名: %s\n", __func__, pszType);
+            }
+        }
+        else if (TDR_TAG_REFER_TYPE == *pszType)
         {
-			TDR_ENTRY_SET_REFER_TYPE(a_pstEntry);
+            TDR_ENTRY_SET_REFER_TYPE(a_pstEntry);
             pszType++;
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 识别为引用类型，处理后类型名: %s\n", __func__, pszType);
+            }
+        }
+        else {
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 非指针/引用类型，类型名保持: %s\n", __func__, pszType);
+            }
+        }
+    }
+    else {
+        if (fpLog) {
+            fprintf(fpLog, "[%s] 库版本不支持指针/引用类型，跳过前缀检查\n", __func__);
         }
     }
 
-
     /*获取entry的type*/
-    idx = tdr_typename_to_idx(pszType);   
+
+    idx = tdr_typename_to_idx(pszType);
+    if (fpLog) {
+        fprintf(fpLog, "[%s] 调用tdr_typename_to_idx(\"%s\") 返回索引: %d\n",
+            __func__, pszType, idx);
+    }
+
     if (TDR_INVALID_INDEX != idx)
-    { 
+    {
         /*内置数据类型*/
-        pstTypeInfo = tdr_idx_to_typeinfo(idx); 
+        pstTypeInfo = tdr_idx_to_typeinfo(idx);
+        if (fpLog) {
+            fprintf(fpLog, "[%s] 匹配内置类型，索引=%d，类型信息地址: %p\n",
+                __func__, idx, pstTypeInfo);
+        }
+
         if (TDR_TYPE_COMPOSITE < pstTypeInfo->iType)
-        {   
-            a_pstEntry->idxType = idx;       
-            a_pstEntry->iType	 = pstTypeInfo->iType;   
+        {
+            a_pstEntry->idxType = idx;
+            a_pstEntry->iType = pstTypeInfo->iType;
             a_pstEntry->iHUnitSize = pstTypeInfo->iSize;
-			a_pstEntry->iNUnitSize = pstTypeInfo->iSize;
-        }else/*if (TDR_TYPE_COMPOSITE < pstTypeInfo->iType)*/
+            a_pstEntry->iNUnitSize = pstTypeInfo->iSize;
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 内置类型解析成功 - iType=%d, 大小=%d\n",
+                    __func__, pstTypeInfo->iType, pstTypeInfo->iSize);
+            }
+        }
+        else
         {
             fprintf(a_fpError, "error:\t 结构<name = %s>的成员元素<name = %s>的type属性值<%s>无效.\n",
                 a_pstMeta->szName, a_pstEntry->szName, pszType);
-            
             iRet = TDR_ERRIMPLE_ENTRY_INVALID_TYPE_VALUE;
-        }/*if (TDR_TYPE_COMPOSITE < pstTypeInfo->iType)*/ 
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 错误: 内置类型无效（iType=%d <= TDR_TYPE_COMPOSITE），返回码: %d\n",
+                    __func__, pstTypeInfo->iType, iRet);
+            }
+        }
 
-    }else /*if (TDR_INVALID_INDEX != idx)*/
-    {   
+    }
+    else
+    {
         /*自定义类型*/
         LPTDRMETA pstTypeMeta = tdr_get_meta_by_name_i(pstLib, pszType);
-		if ((NULL == pstTypeMeta) ||
-			((0 >= pstTypeMeta->iNUnitSize) && !TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry) && !TDR_ENTRY_IS_REFER_TYPE(a_pstEntry)))
-		{
-			fprintf(a_fpError, "error:\t 自定义类型<name = %s>的成员元素<name = %s>的类型<type=%s>没有定义,除指针和引用外，成员的数据类型不支持后向引用。\n",
-				a_pstMeta->szName, a_pstEntry->szName, szType);
+        if (fpLog) {
+            fprintf(fpLog, "[%s] 调用tdr_get_meta_by_name_i(\"%s\") 返回: %p\n",
+                __func__, pszType, pstTypeMeta);
+        }
 
-			iRet = TDR_ERRIMPLE_ENTRY_INVALID_TYPE_VALUE;
-		}else
-		{
-			a_pstEntry->ptrMeta = pstTypeMeta->ptrMeta;
-			a_pstEntry->idxType = pstTypeMeta->idxType;
-			a_pstEntry->iType = pstTypeMeta->iType;   
-			a_pstEntry->iNUnitSize = pstTypeMeta->iNUnitSize;
-			a_pstEntry->iHUnitSize = pstTypeMeta->iHUnitSize;
-		}		
-    }/*if (TDR_INVALID_INDEX != idx)*/
-
+        if ((NULL == pstTypeMeta) ||
+            ((0 >= pstTypeMeta->iNUnitSize) && !TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry) && !TDR_ENTRY_IS_REFER_TYPE(a_pstEntry)))
+        {
+            fprintf(a_fpError, "error:\t 自定义类型<name = %s>的成员元素<name = %s>的类型<type=%s>没有定义,除指针和引用外，成员的数据类型不支持后向引用。\n",
+                a_pstMeta->szName, a_pstEntry->szName, szType);
+            iRet = TDR_ERRIMPLE_ENTRY_INVALID_TYPE_VALUE;
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 错误: 自定义类型无效（pstTypeMeta=%p, iNUnitSize=%d, 指针=%d, 引用=%d），返回码: %d\n",
+                    __func__, pstTypeMeta,
+                    pstTypeMeta ? pstTypeMeta->iNUnitSize : -1,
+                    TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry),
+                    TDR_ENTRY_IS_REFER_TYPE(a_pstEntry),
+                    iRet);
+            }
+        }
+        else
+        {
+            a_pstEntry->ptrMeta = pstTypeMeta->ptrMeta;
+            a_pstEntry->idxType = pstTypeMeta->idxType;
+            a_pstEntry->iType = pstTypeMeta->iType;
+            a_pstEntry->iNUnitSize = pstTypeMeta->iNUnitSize;
+            a_pstEntry->iHUnitSize = pstTypeMeta->iHUnitSize;
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 自定义类型解析成功 - iType=%d, 网络尺寸=%d, 本地尺寸=%d\n",
+                    __func__, pstTypeMeta->iType,
+                    pstTypeMeta->iNUnitSize,
+                    pstTypeMeta->iHUnitSize);
+            }
+        }
+    }
 
     /*如果是指针和引用类型，则重新计算unitsize*/
     if (!TDR_ERR_IS_ERROR(iRet))
     {
         if (TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry))
         {
-			a_pstEntry->iHUnitSize = TDR_POINTER_UINT_SIZE;
-			a_pstEntry->iNUnitSize = 0;
+            a_pstEntry->iHUnitSize = TDR_POINTER_UINT_SIZE;
+            a_pstEntry->iNUnitSize = 0;
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 指针类型重新计算尺寸 - 本地尺寸=%d, 网络尺寸=0\n",
+                    __func__, TDR_POINTER_UINT_SIZE);
+            }
         }
-		if (TDR_ENTRY_IS_REFER_TYPE(a_pstEntry))
-		{
-			a_pstEntry->iHUnitSize = TDR_POINTER_UINT_SIZE;
-		}
-    }/*if (!TDR_ERR_IS_ERROR(iRet))*/
+        if (TDR_ENTRY_IS_REFER_TYPE(a_pstEntry))
+        {
+            a_pstEntry->iHUnitSize = TDR_POINTER_UINT_SIZE;
+            if (fpLog) {
+                fprintf(fpLog, "[%s] 引用类型重新计算尺寸 - 本地尺寸=%d\n",
+                    __func__, TDR_POINTER_UINT_SIZE);
+            }
+        }
+    }
 
+    /*void 类型支持void指针类型*/
+    if (!TDR_ERR_IS_ERROR(iRet) && (a_pstEntry->iType == TDR_TYPE_VOID) && !(TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry)))
+    {
+        fprintf(a_fpError, "error:\t 自定义类型<name = %s>的成员元素<name = %s>的类型为<type=%s>，目前只支持通用指针（*void）数据类型。\n",
+            a_pstMeta->szName, a_pstEntry->szName, szType);
+        iRet = TDR_ERRIMPLE_ENTRY_INVALID_TYPE_VALUE;
+        if (fpLog) {
+            fprintf(fpLog, "[%s] 错误: void类型非指针，返回码: %d\n", __func__, iRet);
+        }
+    }
 
-	/*void 类型支持void指针类型*/
-	if (!TDR_ERR_IS_ERROR(iRet) && (a_pstEntry->iType == TDR_TYPE_VOID) && !(TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry)))
-	{
-		fprintf(a_fpError, "error:\t 自定义类型<name = %s>的成员元素<name = %s>的类型为<type=%s>，目前只支持通用指针（*void）数据类型。\n",
-			a_pstMeta->szName, a_pstEntry->szName, szType);
-
-		iRet = TDR_ERRIMPLE_ENTRY_INVALID_TYPE_VALUE;
-	}
-	
+    // 关闭日志文件
+    if (fpLog) {
+        fprintf(fpLog, "[%s] 类型解析结束 - 最终返回码: %d\n\n", __func__, iRet);
+        fclose(fpLog);
+    }
     return iRet;
 }
 

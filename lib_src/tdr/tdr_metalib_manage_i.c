@@ -714,7 +714,7 @@ LPTDRMETA tdr_get_meta_by_name_i(TDRMETALIB* pstLib, const char* pszName)
 	assert(NULL != pstLib);
 	assert(NULL != pszName);
 
-	pstMap = TDR_GET_MAP_TABLE(pstLib);
+	pstMap = (LPTDRMAPENTRY)((pstLib)->data + (pstLib)->ptrMap);
 
 	for (i=0; i < pstLib->iCurMetaNum; i++)
 	{
