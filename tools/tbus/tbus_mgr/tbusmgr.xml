@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!-- This file is for tbus routes tool application-->
+
+<TbusGCIM>
+  <BussinessID>0</BussinessID>
+  <AddrTemplet>8.8.8.8</AddrTemplet>
+  <GCIMShmKey>7688</GCIMShmKey>
+ <Count>2</Count>
+
+  <Channels>
+    <Priority>8</Priority>
+    <Address>1.0.112.1</Address>
+    <Address>1.0.113.1</Address>
+    <SendSize>10240</SendSize>
+    <RecvSize>20480</RecvSize>
+    <Desc>Some description for this route</Desc>
+  </Channels>
+
+  <Channels>
+    <Priority>8</Priority>
+    <Address>1.1.2.1</Address>
+    <Address>1.1.1.1</Address>
+    <SendSize>10240</SendSize>
+    <RecvSize>20480</RecvSize>
+    <Desc>Some description for this route</Desc>
+  </Channels>
+
+</TbusGCIM>
+

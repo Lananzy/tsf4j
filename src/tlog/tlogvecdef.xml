@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macro name="TLOGVEC_MAX_ELEMENT" value="32" />
+
+<macrosgroup name="TLOG_DEV">
+	<macro name="TLOG_DEV_NO" value="0x00" />
+	<macro name="TLOG_DEV_FILE" value="0x01" />
+	<macro name="TLOG_DEV_NET" value="0x02" />
+	<macro name="TLOG_DEV_VEC" value="0x10" />
+</macrosgroup>
+
+<union name="TLOGDevFileOrNet" version="1" >
+	<entry name="Net" type="TLOGDevNet" id="TLOG_DEV_NET" />
+	<entry name="File" type="TLOGDevFile" id="TLOG_DEV_FILE" />
+</union>
+
+<struct name="TLOGDevElement" version="1" >
+	<entry name="ID" type="int" />
+	<entry name="Ctrl" type="int" />
+	<entry name="FilterVec" type="TLOGFilterVec" />
+	<entry name="Type" type="int" bindmacrosgroup="TLOG_DEV"/>
+	<entry name="Device" type="TLOGDevFileOrNet" select="Type" />
+</struct>
+
+<struct name="TLOGDevVec" version="1" >
+	<entry name="Inst" type="int" />
+	<entry name="Count" type="int" />
+	<entry name="Elements" type="TLOGDevElement" count="TLOGVEC_MAX_ELEMENT" refer="Count" />
+</struct>
+
+</metalib>

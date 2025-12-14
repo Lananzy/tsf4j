@@ -1,0 +1,28 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: libresloader - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSPEC.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /I "../deps/scew" /I "../deps/expat/lib" /I "../../../tsf4g/include" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "TDR_WITH_XML" /Fp"../../tmp/libresloader.pch" /YX /Fo"../../tmp/" /Fd"../../tmp/" /FD /GZ /c 
+"Z:\tmp\ResConvertBasedDR\libresloader\tresloader.c"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSPEC.tmp" 
+Creating command line "link.exe -lib /nologo /out:"..\lib\libresloader_d.lib"  \tmp\tmp\ResConv.obj \tmp\tmp\tresloader.obj "
+<h3>Output Window</h3>
+Compiling...
+tresloader.c
+z:\tmp\resconvertbaseddr\libresloader\tresloader.h(4) : fatal error C1083: Cannot open include file: 'tdr/tdr.h': No such file or directory
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+libresloader_d.lib - 1 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

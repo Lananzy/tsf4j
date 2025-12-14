@@ -1,118 +1,76 @@
 <?xml version="1.0" encoding="gb2312"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="7.10"
 	Name="libtdr_xml"
 	ProjectGUID="{6C332BCD-A4BC-4309-AB16-7494F43C4302}"
-	>
+	SccProjectName=""
+	SccLocalPath="">
 	<Platforms>
 		<Platform
-			Name="Win32"
-		/>
+			Name="Win32"/>
 	</Platforms>
-	<ToolFiles>
-	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\..\..\..\..\lib"
 			IntermediateDirectory=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Release"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="../../../../include,../../../../include/depend,../../../../src/tdr"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;XML_STATIC"
-				StringPooling="true"
+				StringPooling="TRUE"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
+				EnableFunctionLevelLinking="TRUE"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Release/libtdr_xml.pch"
 				AssemblerListingLocation=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Release/"
 				ObjectFile=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Release/"
 				ProgramDataBaseFileName=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Release/"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
-			/>
+				SuppressStartupBanner="TRUE"
+				CompileAs="0"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="2052"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile=".\..\..\..\..\lib\libtdr_xml.lib"
-				SuppressStartupBanner="true"
-			/>
+				SuppressStartupBanner="TRUE"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="2052"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\..\..\..\..\lib"
 			IntermediateDirectory=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Debug"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
@@ -120,48 +78,42 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;XML_STATIC"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				PrecompiledHeaderFile=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Debug/libtdr_xml.pch"
 				AssemblerListingLocation=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Debug/"
 				ObjectFile=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Debug/"
 				ProgramDataBaseFileName=".\..\..\..\..\..\tsf4g_output\src\tdr\libtdr_xml\Debug/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
+				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="4"
-				CompileAs="0"
-			/>
+				CompileAs="0"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="2052"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="..\..\..\..\lib\libtdr_xml_d.lib"
-				SuppressStartupBanner="true"
-			/>
+				SuppressStartupBanner="TRUE"/>
 			<Tool
-				Name="VCALinkTool"
-			/>
+				Name="VCMIDLTool"/>
 			<Tool
-				Name="VCXDCMakeTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCBscMakeTool"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCFxCopTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="2052"/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
 	<References>
@@ -169,652 +121,522 @@
 	<Files>
 		<Filter
 			Name="Source Files"
-			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
-			>
+			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_auxtools.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_auxtools.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_ctypes_info.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_ctypes_info.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_data_initialize.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_data_initialize.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_data_io.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_data_io.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_data_sort.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_data_sort.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_error.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_error.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_error_i.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_error_i.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_iostream_i.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_iostream_i.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_metalib_init.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_metalib_init.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_metalib_manage_i.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_metalib_manage_i.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_net.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_net.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_os.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_os.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_strptime.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_strptime.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl"
-			>
+			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_auxtools.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_auxtools.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_ctypes_info_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_ctypes_info_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_define_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_define_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_error_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_error_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_iostream_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_iostream_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_metalib_kernel_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_metalib_kernel_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_metalib_manage_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_metalib_manage_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\tdr_os.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\tdr_os.h">
 			</File>
 		</Filter>
 		<Filter
 			Name="xml_metalib"
-			>
+			Filter="">
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_data_inoutput.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_data_inoutput.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metaleb_param_i.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metaleb_param_i.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metaleb_param_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metaleb_param_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_entry_manage_i.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_entry_manage_i.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_entry_manage_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_entry_manage_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_meta_manage_i.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_meta_manage_i.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_meta_manage_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_meta_manage_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_to_hpp.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_metalib_to_hpp.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_scew_if.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_scew_if.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_scew_if.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_scew_if.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_XMLMetaLib.c"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_XMLMetaLib.c">
 				<FileConfiguration
-					Name="Release|Win32"
-					>
+					Name="Release|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="2"
 						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
+						PreprocessorDefinitions=""/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
+					Name="Debug|Win32">
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
 						AdditionalIncludeDirectories=""
 						PreprocessorDefinitions=""
 						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
+						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_XMLMetalib_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_XMLMetalib_i.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_XMLtags_i.h"
-				>
+				RelativePath="..\..\..\..\src\tdr\xml_metalib\tdr_XMLtags_i.h">
 			</File>
 		</Filter>
 		<Filter
 			Name="External Header Files"
-			>
+			Filter="">
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_ctypes_info.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_ctypes_info.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_data_initialize.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_data_initialize.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_data_io.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_data_io.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_data_sort.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_data_sort.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_define.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_define.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_error.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_error.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_metalib_init.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_metalib_init.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_metalib_manage.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_metalib_manage.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_metalib_to_hpp.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_metalib_to_hpp.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_net.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_net.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_sql.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_sql.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_XMLMetaLib.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_XMLMetaLib.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\include\tdr\tdr_XMLtags.h"
-				>
+				RelativePath="..\..\..\..\include\tdr\tdr_XMLtags.h">
 			</File>
 		</Filter>
 	</Files>

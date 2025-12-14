@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<metalib tagsetversion="1" name="logdump" version="10" >
+	<macro name="STR_LEN" value="256" />
+	<macro name="DUMP_NET" value="0" />
+	<macro name="DUMP_STDOUT" value="1" />
+	
+	<struct name="DumpStdout" version ="10" >
+		<entry name="MetaLibPath" type="string" size="STR_LEN" />
+		<entry name="MetaName" type="string" size="STR_LEN" />
+	</struct>
+	
+	<union name="DumpDst" version="10" >
+		<entry name="DumpNet" type="TLOGDevNet" id="DUMP_NET" />
+		<entry name="DumpStdout" type="DumpStdout" id="DUMP_STDOUT" />
+	</union>
+		
+	<struct name="logdumpconf" version ="10" >
+		<entry name="LogPath" type="string" size="STR_LEN" />
+		<entry name="DumpSpeed" type="int" defaultvalue="1000" desc="Dump log num per sec, 0 not limit" />
+		<entry name="DumpTotal" type="int" desc="Dump log total num, 0 not limit" />
+		<entry name="MaxBuff" type="int" defaultvalue="204800" desc="one log entry max size" />
+		<entry name="FilterVec" type="TLOGFilterVec" />
+		<entry name="DumpFlag" type="int" defaultvalue="DUMP_NET" />
+		<entry name="DumpDst" type="DumpDst" select="DumpFlag" />
+	</struct>
+</metalib>

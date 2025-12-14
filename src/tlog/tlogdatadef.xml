@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macrosgroup name="TLOG_DATA">
+	<macro name="TLOG_DATA_TXT" value="0x00" />
+	<macro name="TLOG_DATA_BIN" value="0x01" />
+</macrosgroup>
+
+</metalib>

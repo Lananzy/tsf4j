@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib tagsetversion="1" name="ResConv" version="1" >
+<macro name="RES_FILE_MAGIC" value="0x5345534D" />
+<macro name="RES_TRANSLATE_VERSION" value="0x1" />
+
+<struct name="ResHead" version="1" >
+		<entry name="Magic" type="int" />
+		<entry name="Version" type="int" />
+		<entry name="Unit" type="int" />
+		<entry name="Count" type="int" />
+	</struct>
+</metalib>

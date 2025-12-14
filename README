@@ -1,0 +1,151 @@
+总述
+  标准C语言
+
+
+文件名定义规则
+  t模块简写.h
+  t模块简写_功能需求.h
+
+
+函数命名
+  全小写
+  t模块简写_动宾结构：例如，tmsg_get_address()
+  使用内部头文件区分内部接口与对外开放的函数，所有的内部函数名字最后加“_i”
+
+
+接口定义：
+  #define IN
+  #define OUT
+  #define INOUT
+  参数定义加上前缀: IN OUT 表明是输入还是输出 int tmsg_get_address(IN OUT char* pszAddr);
+
+
+返回值
+  返回值基本以int来表示正确和错误,0表示正确,<0表示错误,>0表示其它意义
+
+
+变量命名
+  首字母+下划线+类型+具体名字
+
+  首字母：
+     gs -- global static 静态全局变量
+     g --  global 普通全局变量
+     s --  函数体内 static 静态变量
+     a --  argument 传入形参
+     
+   类型：
+     u -- 是否为unsigned
+
+     ch  -- char
+     sh  -- short
+     i   -- int
+     l   -- long
+     ll  -- long long
+     sz  -- string buffer
+     p   -- pointer
+     d   -- double
+     f   -- float
+     pfn -- function pointer
+     psz -- const char *
+
+   对于struct的命名：
+     都使用typedef
+     占位名使用tag前缀，实际命名使用大写字母 (宏定义为了区分，所有的macro定义都要加下划线)
+
+
+空格
+  代码中使用4个空格(或者1个table需要等于4个blank)
+
+
+注释
+  使用doxygen 注释代码
+
+
+代码安全
+  字符串操作等不使用非安全函数(如strcpy、sprintf等)
+
+
+Makefile
+  使用统一Makefile
+
+
+测试
+  测试使用cunit
+  测试文件的名字使用ut_开头
+  测试的可执行文件以ut_开头，如pal的unitest可执行文件为：ut_pal
+  windows下的unittest工程使用ut_模块名的方式，如：ut_pal ut_tdr ut_tsec ...
+  建立自动build机制 (每周4下午)
+
+windows下的工程命名：
+  只提供一个dsw/sln，统一命名为tsf4g
+  库类型的工程命名为:lib+名字。
+  unittest类型的命名为:ut+名字。
+  可执行类型的命名为:可执行文件名。
+
+文档命名：
+  所有的文档都保存在tsf4g/docs目录下。
+  所有中间的html文档或者其他文档都保存在tsf4g/docs/模块名 目录下。
+  生成的chm格式帮助文件保存在tsf4g/docs/目录下，命名方式为： 模块名.chm
+
+目录结构：
+  tsf4g
+     |-----include
+     |        |-------pal
+     |        |-------tdr
+     |        |-------tsec
+     |        |-------tmng
+     |        |-------tmsg
+     |        |-------tlog
+     |        
+     |------src  
+     |       |--------pal
+     |       |--------tdr
+     |       |--------tsec
+     |       |--------tmng
+     |       |--------tmsg
+     |       |--------tlog
+     |
+     |------deps
+     |       |--------cunit
+     |       |--------pcre
+     |
+     |------unittest
+     |       |--------Makefile
+     |
+     |------lib
+     |
+     |------apps
+     |       |--------tconnd
+     |       |--------tmapper
+     |
+     |------docs
+     |       |--------pal
+     |       |--------tdr
+     |       |--------tsec
+     |       |--------tmng
+     |       |--------tmsg
+     |
+     |------win32
+             |--------vc6
+             |         |-------tsf4g
+             |                   |--------libcomm
+             |                   |--------libpcre
+             |                   |--------libpal
+             |                   |--------libtdr
+             |                   |--------libtsec
+             |                   |--------libtmng
+             |                   |--------libtmsg
+             |                   |--------ut_pal
+             |                   |--------ut_tdr
+             |                   |--------ut_tsec
+             |         
+             |--------vc7
+             |         |....
+             |
+             |--------vc8
+                       |....
+
+
+进一步标准规范参考
+  <<IERD代码编写规范.doc>>
+

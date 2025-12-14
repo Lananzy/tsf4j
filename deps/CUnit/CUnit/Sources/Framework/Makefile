@@ -49,10 +49,10 @@ CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
 libcunittestfmk_a_AR = $(AR) $(ARFLAGS)
-am__DEPENDENCIES_1 = CUError_test.o MyMem_test.o \
-	TestDB_test.o TestRun_test.o Util_test.o
-libcunittestfmk_a_DEPENDENCIES =  \
-	$(am__DEPENDENCIES_1)
+#am__DEPENDENCIES_1 = CUError_test.o MyMem_test.o \
+#	TestDB_test.o TestRun_test.o Util_test.o
+#libcunittestfmk_a_DEPENDENCIES =  \
+#	$(am__DEPENDENCIES_1)
 am_libcunittestfmk_a_OBJECTS =
 libcunittestfmk_a_OBJECTS = $(am_libcunittestfmk_a_OBJECTS)
 LTLIBRARIES = $(noinst_LTLIBRARIES)
@@ -89,11 +89,11 @@ BUILD_AUTOMATED = TRUE
 BUILD_BASIC = TRUE
 BUILD_CONSOLE = TRUE
 BUILD_CURSES = FALSE
-BUILD_EXAMPLES = TRUE
-BUILD_TEST = TRUE
+BUILD_EXAMPLES = FALSE
+BUILD_TEST = FALSE
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS =  -DRELEASE=0 -Wall -W -pedantic -Wshadow -ansi -I/home/jds/doc/CUnit-2.1-0/CUnit/Headers
+CFLAGS =  -DRELEASE=0 -Wall -W -pedantic -Wshadow -ansi -I/root/tsf4g/deps/CUnit/CUnit/Headers
 CPP = gcc -E
 CPPFLAGS = 
 CURSES_LIB = 
@@ -119,19 +119,19 @@ ENABLE_CURSES_FALSE =
 ENABLE_CURSES_TRUE = #
 ENABLE_DEBUG = FALSE
 ENABLE_DEPRECATED = FALSE
-ENABLE_EXAMPLES_FALSE = #
-ENABLE_EXAMPLES_TRUE = 
+ENABLE_EXAMPLES_FALSE = 
+ENABLE_EXAMPLES_TRUE = #
 ENABLE_MEMTRACE = FALSE
-ENABLE_TEST_FALSE = #
-ENABLE_TEST_TRUE = 
+ENABLE_TEST_FALSE = 
+ENABLE_TEST_TRUE = #
 EXEEXT = 
-F77 = g77
+F77 = gfortran
 FFLAGS = -g -O2
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
-LDFLAGS =  -L/home/jds/doc/CUnit-2.1-0/CUnit/Sources
+LDFLAGS =  -L/root/tsf4g/deps/CUnit/CUnit/Sources
 LIBOBJS = 
 LIBS = -lc 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -162,7 +162,7 @@ VERSION_MINOR = 1
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_CXX = g++
-ac_ct_F77 = g77
+ac_ct_F77 = gfortran
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = strip
 am__fastdepCC_FALSE = #
@@ -181,7 +181,7 @@ build_cpu = i686
 build_os = linux-gnu
 build_vendor = pc
 datadir = ${prefix}/share
-exec_prefix = ${prefix}
+exec_prefix = /root/tsf4g
 host = i686-pc-linux-gnu
 host_alias = 
 host_cpu = i686
@@ -189,14 +189,14 @@ host_os = linux-gnu
 host_vendor = pc
 includedir = ${prefix}/include
 infodir = ${prefix}/info
-install_sh = /home/jds/doc/CUnit-2.1-0/install-sh
+install_sh = /root/tsf4g/deps/CUnit/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localstatedir = ${prefix}/var
 mandir = ${prefix}/man
 mkdir_p = mkdir -p --
 oldincludedir = /usr/include
-prefix = /usr/local
+prefix = /root/tsf4g
 program_transform_name = s,x,x,
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
@@ -211,18 +211,18 @@ SHARED_SOURCES = \
 
 noinst_LTLIBRARIES = libcunitfmk.la
 libcunitfmk_la_SOURCES = $(SHARED_SOURCES)
-TEST_DEFINES = -DCUNIT_BUILD_TESTS -DCUNIT_DO_NOT_DEFINE_UNLESS_BUILDING_TESTS -DMEMTRACE
-TEST_INCLUDES = -I../Test
-TEST_OBJECTS = \
-	CUError_test.o \
-	MyMem_test.o \
-	TestDB_test.o \
-	TestRun_test.o \
-	Util_test.o
+#TEST_DEFINES = -DCUNIT_BUILD_TESTS -DCUNIT_DO_NOT_DEFINE_UNLESS_BUILDING_TESTS -DMEMTRACE
+#TEST_INCLUDES = -I../Test
+#TEST_OBJECTS = \
+#	CUError_test.o \
+#	MyMem_test.o \
+#	TestDB_test.o \
+#	TestRun_test.o \
+#	Util_test.o
 
-noinst_LIBRARIES = libcunittestfmk.a
-libcunittestfmk_a_SOURCES = 
-libcunittestfmk_a_LIBADD = $(TEST_OBJECTS)
+#noinst_LIBRARIES = libcunittestfmk.a
+#libcunittestfmk_a_SOURCES = 
+#libcunittestfmk_a_LIBADD = $(TEST_OBJECTS)
 all: all-am
 
 .SUFFIXES:
@@ -485,8 +485,8 @@ uninstall-am: uninstall-info-am
 	tags uninstall uninstall-am uninstall-info-am
 
 
-%_test.o: %.c
-	$(COMPILE) $(TEST_INCLUDES) $(TEST_DEFINES) -o $@ -c $<
+#%_test.o: %.c
+#	$(COMPILE) $(TEST_INCLUDES) $(TEST_DEFINES) -o $@ -c $<
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

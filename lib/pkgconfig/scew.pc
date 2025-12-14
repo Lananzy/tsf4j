@@ -1,0 +1,10 @@
+prefix=/root/tsf4g
+exec_prefix=/root/tsf4g
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: SCEW
+Description: Simple C Expat Wrapper
+Version: 0.4.0
+Libs: -L${exec_prefix}/lib -lscew -lpthread -lexpat 
+Cflags: -I${prefix}/include

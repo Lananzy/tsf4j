@@ -49,14 +49,14 @@ CONFIG_CLEAN_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
 ARFLAGS = cru
 libcunit_test_a_AR = $(AR) $(ARFLAGS)
-am__DEPENDENCIES_1 = Framework/CUError_test.o \
-	Framework/MyMem_test.o \
-	Framework/TestDB_test.o \
-	Framework/TestRun_test.o \
-	Framework/Util_test.o
+#am__DEPENDENCIES_1 = Framework/CUError_test.o \
+#	Framework/MyMem_test.o \
+#	Framework/TestDB_test.o \
+#	Framework/TestRun_test.o \
+#	Framework/Util_test.o
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-libcunit_test_a_DEPENDENCIES =  \
-	$(am__DEPENDENCIES_2)
+#libcunit_test_a_DEPENDENCIES =  \
+#	$(am__DEPENDENCIES_2)
 am_libcunit_test_a_OBJECTS =
 libcunit_test_a_OBJECTS = $(am_libcunit_test_a_OBJECTS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
@@ -119,11 +119,11 @@ BUILD_AUTOMATED = TRUE
 BUILD_BASIC = TRUE
 BUILD_CONSOLE = TRUE
 BUILD_CURSES = FALSE
-BUILD_EXAMPLES = TRUE
-BUILD_TEST = TRUE
+BUILD_EXAMPLES = FALSE
+BUILD_TEST = FALSE
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS =  -DRELEASE=0 -Wall -W -pedantic -Wshadow -ansi -I/home/jds/doc/CUnit-2.1-0/CUnit/Headers
+CFLAGS =  -DRELEASE=0 -Wall -W -pedantic -Wshadow -ansi -I/root/tsf4g/deps/CUnit/CUnit/Headers
 CPP = gcc -E
 CPPFLAGS = 
 CURSES_LIB = 
@@ -149,19 +149,19 @@ ENABLE_CURSES_FALSE =
 ENABLE_CURSES_TRUE = #
 ENABLE_DEBUG = FALSE
 ENABLE_DEPRECATED = FALSE
-ENABLE_EXAMPLES_FALSE = #
-ENABLE_EXAMPLES_TRUE = 
+ENABLE_EXAMPLES_FALSE = 
+ENABLE_EXAMPLES_TRUE = #
 ENABLE_MEMTRACE = FALSE
-ENABLE_TEST_FALSE = #
-ENABLE_TEST_TRUE = 
+ENABLE_TEST_FALSE = 
+ENABLE_TEST_TRUE = #
 EXEEXT = 
-F77 = g77
+F77 = gfortran
 FFLAGS = -g -O2
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
-LDFLAGS =  -L/home/jds/doc/CUnit-2.1-0/CUnit/Sources
+LDFLAGS =  -L/root/tsf4g/deps/CUnit/CUnit/Sources
 LIBOBJS = 
 LIBS = -lc 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -192,7 +192,7 @@ VERSION_MINOR = 1
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_CXX = g++
-ac_ct_F77 = g77
+ac_ct_F77 = gfortran
 ac_ct_RANLIB = ranlib
 ac_ct_STRIP = strip
 am__fastdepCC_FALSE = #
@@ -211,7 +211,7 @@ build_cpu = i686
 build_os = linux-gnu
 build_vendor = pc
 datadir = ${prefix}/share
-exec_prefix = ${prefix}
+exec_prefix = /root/tsf4g
 host = i686-pc-linux-gnu
 host_alias = 
 host_cpu = i686
@@ -219,14 +219,14 @@ host_os = linux-gnu
 host_vendor = pc
 includedir = ${prefix}/include
 infodir = ${prefix}/info
-install_sh = /home/jds/doc/CUnit-2.1-0/install-sh
+install_sh = /root/tsf4g/deps/CUnit/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localstatedir = ${prefix}/var
 mandir = ${prefix}/man
 mkdir_p = mkdir -p --
 oldincludedir = /usr/include
-prefix = /usr/local
+prefix = /root/tsf4g
 program_transform_name = s,x,x,
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
@@ -253,14 +253,14 @@ CONSOLE_OBJECT_FILES_SHARED = $(CONSOLE_OBJECTS_SHARED)
 CONSOLE_COMPILE_DIRS = Console
 #CURSES_OBJECT_FILES_SHARED = $(CURSES_OBJECTS_SHARED)
 #CURSES_COMPILE_DIRS = Curses
-TEST_OBJECT_FILES = \
-	Framework/CUError_test.o \
-	Framework/MyMem_test.o \
-	Framework/TestDB_test.o \
-	Framework/TestRun_test.o \
-	Framework/Util_test.o
+#TEST_OBJECT_FILES = \
+#	Framework/CUError_test.o \
+#	Framework/MyMem_test.o \
+#	Framework/TestDB_test.o \
+#	Framework/TestRun_test.o \
+#	Framework/Util_test.o
 
-TEST_COMPILE_DIRS = Test
+#TEST_COMPILE_DIRS = Test
 COMPILE_DIRS = \
 	$(FRAMEWORK_COMPILE_DIRS) \
 	$(AUTOMATED_COMPILE_DIRS) \
@@ -283,9 +283,9 @@ lib_LTLIBRARIES = libcunit.la
 libcunit_la_SOURCES = 
 libcunit_la_LIBADD = $(OBJECT_FILES_SHARED)
 libcunit_la_LDFLAGS = -version-info 1:1:0
-noinst_LIBRARIES = libcunit_test.a
-libcunit_test_a_SOURCES = 
-libcunit_test_a_LIBADD = $(TEST_OBJECTS)
+#noinst_LIBRARIES = libcunit_test.a
+#libcunit_test_a_SOURCES = 
+#libcunit_test_a_LIBADD = $(TEST_OBJECTS)
 all: all-recursive
 
 .SUFFIXES:

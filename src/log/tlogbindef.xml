@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macro name="TLOGBIN_VER" value="1" />
+<macro name="TLOGBIN_MAGIC" value="55" />
+	
+<macro name="TLOGBIN_ID_BASE" value="1" />
+<macro name="TLOGBIN_ID_HEAD" value="2" />
+<macro name="TLOGBIN_ID_PKG" value="3" />
+<macro name="TLOGBIN_MAX_DATA" value="64000" />
+
+<struct name="TLOGBinFilter" version="1" >
+	<entry name="StartTime" type="int" />
+	<entry name="LastSec" type="int" />
+	<entry name="ID" type="IntFilter" />
+	<entry name="Cls" type="IntFilter" />
+	<entry name="Inst" type="int" />
+</struct>
+
+
+<struct name="TLOGBinTime" version="1" >
+	<entry name="sec" type="int" />
+	<entry name="usec" type="int" />
+</struct>
+
+<struct name="TLOGBinBase" id="TLOGBIN_ID_BASE" version="1" >
+	<!-- nerver change this sturct -->
+	<entry name="Ver" type="char" />
+	<entry name="Magic" type="char" />
+	<entry name="Cmd" type="char" />
+	<entry name="HeadLen" type="char" />
+	<entry name="BodyLen" type="int" />
+	<entry name="Time" type="TLOGBinTime" />
+	<entry name="Seq" type="int" />
+	<entry name="ID" type="int" />
+	<entry name="Cls" type="int" />
+	<entry name="Type" type="int" />
+	<entry name="BodyVer" type="int" />
+	<entry name="CheckSum" type="int" />
+	<!-- nerver change this type -->
+</struct>
+
+<struct name="TLOGBinHead" id="TLOGBIN_ID_HEAD" version="1" >
+	<entry name="Ver" type="char" />
+	<entry name="Magic" type="char" />
+	<entry name="Cmd" type="char" />
+	<entry name="HeadLen" type="char" />
+	<entry name="BodyLen" type="int" />
+	<entry name="Time" type="TLOGBinTime" />
+	<entry name="Seq" type="int" />
+	<entry name="ID" type="int" />
+	<entry name="Cls" type="int" />
+	<entry name="Type" type="int" />
+	<entry name="BodyVer" type="int" />
+	<entry name="CheckSum" type="int" />
+	<!-- nerver add member before here -->
+
+</struct>
+
+<struct name="TLOGBinPkg" id="TLOGBIN_ID_PKG" version="1" >
+	<entry name="Head" type="TLOGBinHead" />
+	<entry name="Data" type="char" count="TLOGBIN_MAX_DATA" refer="Head.BodyLen" />
+</struct>
+
+</metalib>

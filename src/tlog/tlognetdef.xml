@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macro name="TLOGNET_URL_LEN" value="128" />
+<macro name="TLOGNET_DEF_TIMEOUT" value="2000" />
+
+<struct name="TLOGDevNet" version="1" >
+	<entry name="Url" type="string" size="TLOGNET_URL_LEN" />
+	<entry name="SendBuff" type="int" />
+	<entry name="RecvBuff" type="int" />
+	<entry name="AutoReconnect" type="int" />
+	<entry name="MaxRetry" type="int" />
+	<entry name="ConnTimeout" type="int" />
+	<entry name="SendTimeout" type="int" />
+</struct>
+
+</metalib>

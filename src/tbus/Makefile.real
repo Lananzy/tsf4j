@@ -1,0 +1,49 @@
+#  @file $RCSfile: Makefile.real,v $
+#    Makefile for tsf4g-tbus module
+#  $Id: Makefile.real,v 1.5 2009/03/16 02:22:36 jacky Exp $
+#  @author $Author: jacky $
+#  @date $Date: 2009/03/16 02:22:36 $
+#  @version $Revision: 1.5 $
+#  @note Editor: Vim 6.3, Gcc 4.0.2, tab=4
+#  @note Platform: Linux
+
+include ../../tsf4g.mk
+
+TBUS_CFILE=$(wildcard *.c)
+TBUS_OBJ=$(TBUS_CFILE:.c=.o)
+TBUS_LIB=$(TSF4G_LIB)/libtbus.a
+TBUS_SO=$(TSF4G_LIB)/libtbus.so
+
+TBUS_LIBS= $(TSF4G_LIB)/libtlog.a $(TSF4G_LIB)/libtagentapi.a $(TSF4G_LIB)/libtdr.a $(TSF4G_LIB)/libpal.a -lpthread
+#LIBS  += $(LOG_LIB) -lpal
+
+ifeq ($(build), debug)
+CFLAGS+=-D_DEBUG_
+endif
+    
+
+.PHONY: all clean
+
+all: $(TBUS_LIB) $(TBUS_SO) 
+	cp $(TBUS_OBJ)  $(TSF4G_PACKLIBDIR)
+
+-include $(TBUS_CFILE:.c=.d)
+
+%.d: %.c
+	$(CC) -MM $(CFLAGS) $< -o $@
+
+%.o: %.c %.d
+	$(CC) -c $(CFLAGS) $(DEBUG) $<
+
+$(TBUS_LIB): $(TBUS_OBJ)
+	ar r $(TBUS_LIB) $^
+
+$(TBUS_SO): $(TBUS_OBJ)
+	$(CC) -o $(TBUS_SO) $(SHARED) $(CFLAGS) $(DEBUG) $^ $(LDPATH) $(TBUS_LIBS)
+	
+
+clean:
+	$(RM) *.o  *.d
+	$(RM) $(TBUS_LIB) $(TBUS_SO)
+	
+

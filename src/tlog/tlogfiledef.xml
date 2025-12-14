@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macro name="TLOGFILE_PATTERN_LEN" value="128" />
+<macro name="TLOGFILE_MAX_SIZE" value="0x7fff0000" />
+
+<struct name="TLOGDevFile" version="1" >
+	<entry name="Pattern" type="string" size="TLOGFILE_PATTERN_LEN" />
+	<entry name="BuffSize" type="int" />
+	<entry name="SizeLimit" type="int" />
+	<entry name="Precision" type="int" />
+	<entry name="MaxRotate" type="int" />
+	<entry name="SyncTime" type="int" />
+	<entry name="NoFindLatest" type="int" />
+	<entry name="RotateStick" type="int" />
+</struct>
+
+</metalib>

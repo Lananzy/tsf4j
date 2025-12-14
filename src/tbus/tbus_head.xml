@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="gbk" standalone="yes" ?>
+<!-- This file is for tbus route node protocol -->
+
+<metalib tagsetversion="1" name="TbusHead" version="1">
+
+  <!-- Tbus package -->
+  <macro name="TBUS_FORWARD_MAX_ROUTE" value="32" desc="" />
+
+  <macro name="TBUS_HEAD_MAX_LEN" value="255" desc="tbus头部消息网络编码后的最大长度" />
+  
+  <macro name="TBUS_HEAD_FLAG_WITH_ROUTE" value="0x01" desc="消息头部附带路由信息" />
+  <macro name="TBUS_HEAD_FLAG_SYN" value="0x02" desc="序列号同步数据包" />
+  <macro name="TBUS_HEAD_FLAG_TACE" value="0x04" desc="染色消息，需进行跟踪" />
+  <macro name="TBUS_HEAD_FLAG_WITH_ACK" value="0x08" desc="标识位表示数据包中捎带了接收数据包的序列号" />
+  <macro name="TBUS_HEAD_FLAG_COUNTERFEIT_DATA" value="0x10" desc="此标志位表示当前数据包只是为了方便tbus处理而伪造的消息包" />
+  
+
+  <macro name="TBUS_SYNFLAG_NO_RECV" value="0x01" desc="之前还没有接收到数据包" />
+  <macro name="TBUS_SUNFLAG_CONTINUE_RECV" value="0x02" desc="之前已经有接收到数据包" />
+  
+  <macrosgroup name="TbusHeadCmds" version="0">
+    <macro name="TBUS_HEAD_CMD_TRANSFER_DATA" value="0" desc="转发数据命令S" />
+    <macro name="TBUS_HEAD_CMD_ACKSEQ" value="1" desc="同步命令：数据传输过程中接收序列号确认包" />
+    <macro name="TBUS_HEAD_CMD_HANDSHAKE_CLI_SYN" value="2" desc="握手命令：客户端发起的SYN包，向对方提供接受包的序列号" />
+    <macro name="TBUS_HEAD_CMD_HANDSHAKE_SVR_SYN_ACK" value="3" desc="握手命令：svr受到SYN包后，向对方提供接受包的序列号和发送数据包的序列号" />
+    <macro name="TBUS_HEAD_CMD_HANDSHAKE_CLI_ACK" value="4" desc="握手命令：客户端收到SYN_ACK包后，向对方提供发送数据包的序列号" />
+  </macrosgroup>
+  
+  <struct name="TSynHeadExt" version="0" >
+    <entry name="SynFlag" type="tinyuint" version="1" />
+    <entry name="Reserve" type="tinyuint" version="1" />
+  </struct>
+
+  <struct name="TDataHeadExt" version="0" >
+    <entry name="Route"      type="tinyuint"  desc="count of the route" />
+    <entry name="IsDyed" type="tinyint" />
+    <entry name="DyedID" type="int" refer="IsDyed" />
+    <entry name="RouteAddr" type="int" count="TBUS_FORWARD_MAX_ROUTE" refer="Route" />
+  </struct>
+
+  <union name="TheadExt" version="0" >
+    <entry name="DataHead" type="TDataHeadExt"  id="TBUS_HEAD_CMD_TRANSFER_DATA" />
+    <entry name="SynHead" type="TSynHeadExt" />   
+  </union>
+  
+  <struct name="TbusHead" version="0" sizeinfo="HeadLen" versionindicator="Ver">
+    <entry name="Ver"      type="tinyuint" />
+    <entry name="HeadLen"  type="tinyuint" />
+    <entry name="CheckSum" type="smallint"   />
+    <entry name="BodyLen"  type="int"   />
+    <entry name="Dst"      type="int"   />
+    <entry name="Src"      type="int"   />
+    <entry name="Seq"      type="int"   desc="在通常数据包包中，此字段存储数据包的序列号，在握手数据包中此字段存储发送数据包的序列号" />
+    <entry name="Flag"     type="tinyuint"       desc="bit set: LOG_TRACE,TBUS_HEAD_FLAG_SYN " />
+    <entry name="Cmd"     type="tinyuint"   defaultvalue="TBUS_HEAD_CMD_TRANSFER_DATA"     desc="存储令字段" />
+    <entry name="RecvSeq" type="int" version="1" />
+    <entry name="ExtHead" type="TheadExt" select="Cmd" />    
+  </struct> 
+
+</metalib>
+

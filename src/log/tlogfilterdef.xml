@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macro name="TLOG_VEC_FILTER" value="32" />
+
+<struct name="IntFilter" version="1" >
+	<entry name="Start" type="int" />
+	<entry name="Count" type="int" />
+	<entry name="Mod" type="short" />
+	<entry name="Res" type="short" io="3" />
+	<entry name="ModStart" type="short" />
+	<entry name="ModCount" type="short" />
+</struct>
+
+<struct name="TLOGFilter" version="1" >
+	<entry name="IDFilter" type="IntFilter" />
+	<entry name="ClsFilter" type="IntFilter" />
+</struct>
+
+<struct name="TLOGFilterVec" version="1" >
+	<entry name="Count" type="int" />
+	<entry name="Filters" type="TLOGFilter" count="TLOG_VEC_FILTER" refer="Count" />
+</struct>
+
+</metalib>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="tapp_basedata_def" tagsetversion="1" version="1" padding="1" >
+
+<struct name="tapp_basedata" version="1" >
+	<entry name="ProcMaxTime" type="float" desc="tapp no-idle proc max process time in basedata timer, unit ms" />
+	<entry name="ProcMinTime" type="float" desc="tapp no-idle proc min process time in basedata timer, unit ms" />
+	<entry name="ProcTotalTime" type="float" desc="tapp no-idle proc total process time in basedata timer, unit ms" />
+	<entry name="ProcTotalNum" type="long" desc="tapp no-idle proc total num in basedata timer" />
+	<entry name="IdleTotalNum" type="long" desc="tapp idle total num in basedata timer" />
+	<entry name="TickMaxTime" type="float" desc="tapp tick max process time in basedata timer, unit ms" />
+	<entry name="TickMinTime" type="float" desc="tapp tick proc min process time in basedata timer, unit ms" />
+	<entry name="TickTotalTime" type="float" desc="tapp tick proc total process time in basedata timer, unit ms" />
+	<entry name="TickTotalNum" type="long" desc="tapp tick proc total num in basedata timer" />
+</struct>
+
+</metalib>

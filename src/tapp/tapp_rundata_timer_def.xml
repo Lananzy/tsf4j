@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="tapp_rundata_timer_def" tagsetversion="1" version="1" padding="1" >
+
+<struct name="tapp_basedata_timer" version="1" >
+	<entry name="GlobalTime" type="long" desc="global base data timer" />
+</struct>
+
+<struct name="tapp_rundata_status_timer" version="1" >
+	<entry name="GlobalTime" type="long" desc="global run data status val timer" />
+</struct>
+
+<struct name="tapp_rundata_cumu_timer" version="1" >
+	<entry name="GlobalTime" type="long" desc="global run data cumulate val timer" />
+</struct>
+
+<struct name="tapp_rundata_timer" version="1" >
+	<entry name="basedata_timer" type="tapp_basedata_timer" desc="base data timer" />
+	<entry name="rundata_status_timer" type="tapp_rundata_status_timer" desc="run data status val timer" />
+	<entry name="rundata_cumu_timer" type="tapp_rundata_cumu_timer" desc="run data cumulate val timer" />
+</struct>
+
+</metalib>

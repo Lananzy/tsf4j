@@ -1,0 +1,31 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: resprint - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP9D.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"../bin/resprint.pdb" /debug /machine:I386 /out:"../bin/resprint.exe" /pdbtype:sept /libpath:"../../../tsf4g/lib" /libpath:"../lib" 
+"\work\资源转换\tmp\main.obj"
+"\work\资源转换\tmp\ResConv.obj"
+"\work\资源转换\tmp\resprint.obj"
+"\work\资源转换\tmp\tgetopt.obj"
+"\work\tsf4g\lib\libtdr_xml_d.lib"
+]
+Creating command line "link.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP9D.tmp"
+<h3>Output Window</h3>
+Linking...
+LINK : LNK6004: ../bin/resprint.exe not found or not built by the last incremental link; performing full link
+LINK : warning LNK4098: defaultlib "MSVCRT" conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib "LIBCMTD" conflicts with use of other libs; use /NODEFAULTLIB:library
+
+
+
+<h3>Results</h3>
+resprint.exe - 0 error(s), 2 warning(s)
+</pre>
+</body>
+</html>

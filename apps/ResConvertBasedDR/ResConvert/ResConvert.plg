@@ -1,0 +1,99 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: ResConvert - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1D3.tmp" with contents
+[
+/nologo /MDd /W3 /GX /ZI /Od /I "../deps/scew" /I "../deps/expat/lib" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fo"..\..\out\resconvertbasedDR\Debug/" /Fd"..\..\out\resconvertbasedDR\Debug/" /FD /GZ /c 
+"I:\work\资源转换\ResConvertBasedDR\ResConvert\excel.cpp"
+"I:\work\资源转换\ResConvertBasedDR\ResConvert\ResConvert.cpp"
+"I:\work\资源转换\ResConvertBasedDR\ResConvert\ResConvertDlg.cpp"
+"I:\work\资源转换\ResConvertBasedDR\ResConvert\TreeOptionsCtrl.cpp"
+"I:\work\资源转换\ResConvertBasedDR\comm\ConvResTree.cpp"
+"I:\work\资源转换\ResConvertBasedDR\comm\ConvTreeParser.cpp"
+"I:\work\资源转换\ResConvertBasedDR\comm\ConvTreeXmlParser.cpp"
+"I:\work\资源转换\ResConvertBasedDR\comm\ResStyleList.cpp"
+"I:\work\资源转换\ResConvertBasedDR\comm\scew_if.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1D3.tmp" 
+Creating temporary file "C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1D4.tmp" with contents
+[
+/nologo /subsystem:windows /incremental:yes /pdb:"..\bin/ResConvert.pdb" /debug /machine:I386 /out:"D:\Moby Document\往来文件\QQFo\tools\develop/ResConvert.exe" /pdbtype:sept 
+"\work\资源转换\out\resconvertbasedDR\Debug\excel.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\ResConvert.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\ResConvert.res"
+"\work\资源转换\out\resconvertbasedDR\Debug\ResConvertDlg.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\TreeOptionsCtrl.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\ConvResTree.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\ConvTreeParser.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\ConvTreeXmlParser.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\ResStyleList.obj"
+"\work\资源转换\out\resconvertbasedDR\Debug\scew_if.obj"
+]
+Creating command line "link.exe @C:\DOCUME~1\jackyai\LOCALS~1\Temp\RSP1D4.tmp"
+<h3>Output Window</h3>
+Compiling...
+excel.cpp
+ResConvert.cpp
+ResConvertDlg.cpp
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(416) : error C2065: 'nSize' : undeclared identifier
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(768) : error C2065: 'DWORD_PTR' : undeclared identifier
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(768) : error C2146: syntax error : missing ')' before identifier 'pstData'
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(768) : error C2059: syntax error : ')'
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(769) : error C2446: '==' : no conversion from 'unsigned long' to 'class CCommNode *'
+        Conversion from integral type to pointer type requires reinterpret_cast, C-style cast or function-style cast
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(769) : error C2040: '==' : 'class CCommNode *' differs in levels of indirection from 'unsigned long'
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(769) : error C2143: syntax error : missing ';' before '{'
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(769) : warning C4553: '==' : operator has no effect; did you intend '='?
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(813) : error C2065: 'path' : undeclared identifier
+i:\work\资源转换\resconvertbaseddr\resconvert\resconvertdlg.cpp(820) : error C2065: 'PathIsRelativeA' : undeclared identifier
+TreeOptionsCtrl.cpp
+ConvResTree.cpp
+ConvTreeParser.cpp
+i:\work\资源转换\resconvertbaseddr\comm\convtreeparser.cpp(145) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreeparser.cpp(167) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreeparser.cpp(209) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+ConvTreeXmlParser.cpp
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(30) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(63) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(72) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(84) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(110) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(116) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(218) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(262) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(281) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(301) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(333) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+i:\work\资源转换\resconvertbaseddr\comm\convtreexmlparser.cpp(374) : error C2039: 'AppendFormat' : is not a member of 'CString'
+        c:\program files\microsoft visual studio\vc98\mfc\include\afx.h(368) : see declaration of 'CString'
+ResStyleList.cpp
+scew_if.cpp
+Generating Code...
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+ResConvert.exe - 24 error(s), 1 warning(s)
+</pre>
+</body>
+</html>

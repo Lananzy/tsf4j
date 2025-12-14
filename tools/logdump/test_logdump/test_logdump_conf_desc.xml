@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+
+<metalib tagsetversion="1" name="test_logdump" version="10" >
+	<macro name="STR_LEN" value="256" />
+	
+	<struct name="test_logdumpconf" version ="10" >
+		<entry name="OpLogCfg" type="string" size="STR_LEN" />
+	</struct>
+	
+	<struct name="test_logdumprun_cumulate" version ="10" >
+		<entry name="Res" type="int" />
+	</struct>
+	
+	<struct name="test_logdumprun_status" version ="10" >
+		<entry name="Res" type="int" />
+	</struct>
+	
+</metalib>

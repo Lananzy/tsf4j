@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<!-- This file is for tsec ip module -->
+
+<metalib tagsetversion="1" name="tsec_ip" version="1.0">
+
+  <struct name="IPLimit" version="1.0">
+    <entry name="Limit" type="string" size="8" />
+    <entry name="SrcIP" type="string" size="128" />
+    <entry name="DstIP" type="string" size="128" />
+  </struct>
+
+  <struct name="IPACL" version="1.0">
+    <entry name="DefaultRule" type="string" size="8" />
+
+    <entry name="LimitCnt" type="int" />
+    <entry name="Limits" type="IPLimit" count="1024" refer="LimitCnt" />
+  </struct>
+
+</metalib>
+

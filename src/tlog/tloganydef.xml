@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<union name="TLOGDevSelector" version="1" >
+	<entry name="Net" type="TLOGDevNet" id="TLOG_DEV_NET" />
+	<entry name="File" type="TLOGDevFile" id="TLOG_DEV_FILE" />
+	<entry name="Vec" type="TLOGDevVec" id="TLOG_DEV_VEC" />
+</union>
+
+<struct name="TLOGDevAny" version="1">
+	<entry name="Type" type="int" bindmacrosgroup="TLOG_DEV" />
+	<entry name="Device" type="TLOGDevSelector" select="Type" />
+</struct>
+
+</metalib>

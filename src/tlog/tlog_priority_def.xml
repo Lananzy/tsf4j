@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib name="" tagsetversion="1" version="1" padding="1" >
+
+<macrosgroup name="TLOG_PRIORITY">
+	<macro name="TLOG_PRIORITY_FATAL" value="000" />
+	<macro name="TLOG_PRIORITY_ALERT" value="100" />
+	<macro name="TLOG_PRIORITY_CRIT" value="200" />
+	<macro name="TLOG_PRIORITY_ERROR" value="300" />
+	<macro name="TLOG_PRIORITY_WARN" value="400" />
+	<macro name="TLOG_PRIORITY_NOTICE" value="500" />
+	<macro name="TLOG_PRIORITY_INFO" value="600" />
+	<macro name="TLOG_PRIORITY_DEBUG" value="700" />
+	<macro name="TLOG_PRIORITY_TRACE" value="800" />
+	<macro name="TLOG_PRIORITY_NOTSET" value="900" />
+	<macro name="TLOG_PRIORITY_UNKNOWN" value="1000" />
+	<macro name="TLOG_PRIORITY_NULL" value="-1" />
+</macrosgroup>
+
+</metalib>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="gb2312" standalone="yes" ?>
+<!-- This file is for tbus module -->
+
+<metalib tagsetversion="1" name="" version="1.0">
+
+ 
+ 
+
+
+  <macro name="TBUS_MAX_ADDR_STRING_LEN" value="256" desc="max length of comunication address for process" />
+  <macro name="TBUS_MAX_ADDR_TEMPLET_STRING_LEN" value="256" desc="max length of address templet string" />
+  <macro name="TBUS_MAX_HOST_URL_LEN" value="128" desc="max number of channels in one host machine" />
+  <macro name="TBUS_MAX_CHANNEL_NUM_PREHOST" value="1024" desc="max number of channels in one host machine" />
+  <macro name="TBUS_MAX_RELAY_NUM_PREHOST" value="1024" desc="max number of relay channels in one host machine" />
+
+  <macro name="TBUS_MAX_KEY_STRING_LEN" value="256" desc="max length of discription" />
+
+
+
+ 
+  <!-- peer address disable type macros defined -->
+  <macro name="TBUS_MODE_DISABLE" value="1" desc="" />
+  <macro name="TBUS_MODE_ENABLE"  value="2" desc="" />
+
+  <!-- peer address batch ctrl macros defined -->
+  <macro name="TBUS_PEER_CTRL_ONE" value="0" desc="" />
+  <macro name="TBUS_PEER_CTRL_ALL" value="1" desc="" />
+
+
+</metalib>
+

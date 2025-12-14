@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="GBK" standalone="yes" ?>
+<metalib tagsetversion="1" name="ResConv" version="1" >
+<struct name="ResHead" version="1" >
+		<entry name="Magic" type="int" />
+		<entry name="Version" type="int" />
+		<entry name="Unit" type="int" />
+		<entry name="Count" type="int" />
+	</struct>
+</metalib>

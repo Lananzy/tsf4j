@@ -1,0 +1,17 @@
+<logdumpconf version="10">
+	<LogPath>./log</LogPath>
+	<FilterVec>
+	</FilterVec>
+	<DumpFlag>0</DumpFlag>
+	<DumpDst>
+		<DumpNet>
+			<Url>tcp://127.0.0.1:6666</Url>
+			<Sendbuff>204800</Sendbuff>
+			<RecvBuff>0</RecvBuff>
+			<AutoReconnect>10</AutoReconnect>
+			<MaxRetry>20</MaxRetry>                 
+			<ConnTimeout>1000</ConnTimeout>                     
+			<SendTimeout>10000</SendTimeout>
+		</DumpNet>
+	</DumpDst>
+</logdumpconf>	
