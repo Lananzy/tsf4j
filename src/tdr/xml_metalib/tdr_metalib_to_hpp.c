@@ -354,118 +354,315 @@ int tdr_entry_to_hpp_i(FILE* a_fp, LPTDRMETA a_pstMeta, int idxEntry, LPTDRHPPRU
 	return iRet;
 }
 
-int tdr_generate_entry_hpp_name(OUT char *a_szHppName, IN int a_iHppNameSize, IN LPTDRMETAENTRY a_pstEntry,
-								IN LPTDRMETALIB a_pstLib, IN LPTDRHPPRULE a_pstRule)
+static int tdr_generate_entry_hpp_name(OUT char* a_szHppName, IN int a_iHppNameSize, IN LPTDRMETAENTRY a_pstEntry,
+	IN LPTDRMETALIB a_pstLib, IN LPTDRHPPRULE a_pstRule)
 {
-	char szName[TDR_NAME_LEN] = {0};
-	char szMacro[TDR_MACRO_LEN] = {0};
-	char szArray[TDR_MACRO_LEN + 4] = {0};	
-	char szSize[TDR_MACRO_LEN + 4] = {0};
-	char *pszTypePrefix = "";
-	char *pszCustomPrefix = "";
-	char *pszPointPrefix = "";
+	char szName[TDR_NAME_LEN] = { 0 };
+	char szMacro[TDR_MACRO_LEN] = { 0 };
+	char szArray[TDR_MACRO_LEN + 4] = { 0 };
+	char szSize[TDR_MACRO_LEN + 4] = { 0 };
+	char* pszTypePrefix = "";
+	char* pszCustomPrefix = "";
+	char* pszPointPrefix = "";
 	int iRet = TDR_SUCCESS;
+	TDRBOOLEAN bIsForce = TDR_FALSE; // 新增标记：是否为force_前缀
+	FILE* pLogFile = NULL; // 日志文件指针
+	char szLogTime[64] = { 0 }; // 日志时间戳
+	time_t tNow = time(NULL); // 获取当前时间
+
+	// ========== 日志：初始化时间戳（可选，方便定位日志时间） ==========
+	strftime(szLogTime, sizeof(szLogTime), "%Y-%m-%d %H:%M:%S", localtime(&tNow));
 
 	assert(NULL != a_szHppName);
 	assert(0 < a_iHppNameSize);
 	assert(NULL != a_pstEntry);
 	assert(NULL != a_pstRule);
-	
 
-	/*main part of name*/
-	TDR_STRNCPY(szName, a_pstEntry->szName, sizeof(szName));	
-	
-	/*custom prefix*/
-	if (TDR_HPPRULE_ADD_CUSTOM_PREFIX & a_pstRule->iRule)
-	{
-		pszCustomPrefix = a_pstRule->szCustomNamePrefix;
+	/* 处理force前缀，若存在则直接裁剪并标记 */
+	TDR_STRNCPY(szName, a_pstEntry->szName, sizeof(szName));
+	const char* forcePrefix = "force_";
+	size_t prefixLen = strlen(forcePrefix);
+
+	// ========== 日志：记录原始名称 ==========
+	pLogFile = fopen("tdr_generate_name.log", "a"); // 追加模式打开日志文件
+	if (pLogFile != NULL) {
+		fprintf(pLogFile, "[%s] 原始名称：%s\n", szLogTime, a_pstEntry->szName);
+		fclose(pLogFile);
+		pLogFile = NULL;
 	}
 
-	/*type prefix*/
-	if (!(TDR_HPPRULE_NO_TYPE_PREFIX & a_pstRule->iRule))
-	{
-		LPTDRCTYPEINFO pstTypeInfo = tdr_idx_to_typeinfo(a_pstEntry->idxType);	
+	if (strlen(szName) > prefixLen && strncmp(szName, forcePrefix, prefixLen) == 0) {
+		memmove(szName, szName + prefixLen, strlen(szName) - prefixLen + 1);
+		bIsForce = TDR_TRUE; // 标记为force_前缀名称
 
-		if ( 1 == a_pstEntry->iCount )
-		{
-			pszTypePrefix =	pstTypeInfo->pszSPrefix;
-		} else
-		{
-			pszTypePrefix = pstTypeInfo->pszMPrefix;
-		}
-		if ( strlen(a_pstEntry->szName) <= 1 )
-		{/*简单命名不加前缀*/
-			pszTypePrefix = "";
-		}
-
-		if (TDR_ENTRY_IS_REFER_TYPE(a_pstEntry) || TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry))
-		{
-			pszPointPrefix = "p";
-		}		
-	}/*!(TDR_HPPRULE_NO_TYPE_PREFIX & a_pstRule->iRule)*/
-	
-	/*是否改变成员名首字符大小写*/
-	if (!(TDR_HPPRULE_NO_LOWERCASE_PREFIX & a_pstRule->iRule))
-	{
-		if ( '\0' != pszTypePrefix[0] || ('\0' != pszPointPrefix[0]))
-		{
-			szName[0] =	(char )toupper(szName[0]);
-		}else
-		{
-			szName[0]	=	(char)tolower(szName[0]);
+		// ========== 日志：记录裁剪force_前缀后的名称 ==========
+		pLogFile = fopen("tdr_generate_name.log", "a");
+		if (pLogFile != NULL) {
+			fprintf(pLogFile, "[%s] 检测到force_前缀，裁剪后名称：%s\n", szLogTime, szName);
+			fclose(pLogFile);
+			pLogFile = NULL;
 		}
 	}
-	
 
-	/*suffix array[]*/
-	if( TDR_INVALID_INDEX != a_pstEntry->idxCount )
-	{
+	/* 若为force_前缀名称，直接跳过后续前缀和大小写处理 */
+	if (!bIsForce) {
+		/* custom prefix */
+		if (TDR_HPPRULE_ADD_CUSTOM_PREFIX & a_pstRule->iRule) {
+			pszCustomPrefix = a_pstRule->szCustomNamePrefix;
+
+			// ========== 日志：记录自定义前缀 ==========
+			pLogFile = fopen("tdr_generate_name.log", "a");
+			if (pLogFile != NULL) {
+				fprintf(pLogFile, "[%s] 自定义前缀：%s\n", szLogTime, pszCustomPrefix);
+				fclose(pLogFile);
+				pLogFile = NULL;
+			}
+		}
+
+		/* type prefix */
+		if (!(TDR_HPPRULE_NO_TYPE_PREFIX & a_pstRule->iRule)) {
+			LPTDRCTYPEINFO pstTypeInfo = tdr_idx_to_typeinfo(a_pstEntry->idxType);
+			if (1 == a_pstEntry->iCount) {
+				pszTypePrefix = pstTypeInfo->pszSPrefix;
+			}
+			else {
+				pszTypePrefix = pstTypeInfo->pszMPrefix;
+			}
+			if (strlen(szName) <= 1) {
+				pszTypePrefix = "";
+			}
+
+			if (TDR_ENTRY_IS_REFER_TYPE(a_pstEntry) || TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry)) {
+				pszPointPrefix = "p";
+			}
+
+			// ========== 日志：记录类型前缀和指针前缀 ==========
+			pLogFile = fopen("tdr_generate_name.log", "a");
+			if (pLogFile != NULL) {
+				fprintf(pLogFile, "[%s] 类型前缀：%s，指针前缀：%s\n", szLogTime, pszTypePrefix, pszPointPrefix);
+				fclose(pLogFile);
+				pLogFile = NULL;
+			}
+		}
+
+		/* 首字符大小写处理 */
+		if (!(TDR_HPPRULE_NO_LOWERCASE_PREFIX & a_pstRule->iRule)) {
+			if ('\0' != pszTypePrefix[0] || '\0' != pszPointPrefix[0]) {
+				szName[0] = toupper(szName[0]);
+			}
+			else {
+				szName[0] = tolower(szName[0]);
+			}
+
+			// ========== 日志：记录大小写处理后的名称 ==========
+			pLogFile = fopen("tdr_generate_name.log", "a");
+			if (pLogFile != NULL) {
+				fprintf(pLogFile, "[%s] 大小写处理后名称：%s\n", szLogTime, szName);
+				fclose(pLogFile);
+				pLogFile = NULL;
+			}
+		}
+	}
+
+	/* 数组后缀处理（force_名称也需要保留数组信息） */
+	if (TDR_INVALID_INDEX != a_pstEntry->idxCount) {
 		LPTDRMACRO pstMacro = TDR_GET_MACRO_TABLE(a_pstLib);
 		TDR_STRNCPY(szMacro, pstMacro[a_pstEntry->idxCount].szMacro, sizeof(szMacro));
 		tdr_strupr(szMacro);
 		sprintf(szArray, "[%s]", szMacro);
-	}else if( 1 == a_pstEntry->iCount )
-	{
+	}
+	else if (1 == a_pstEntry->iCount) {
 		szArray[0] = '\0';
-	}else if ( 0 == a_pstEntry->iCount )
-	{
+	}
+	else if (0 == a_pstEntry->iCount) {
 		sprintf(szArray, "[1]");
-	} else
-	{
+	}
+	else {
 		sprintf(szArray, "[%d]", a_pstEntry->iCount);
 	}
 
-	/*size*/
-	if ((TDR_TYPE_STRING == a_pstEntry->iType) || (TDR_TYPE_WSTRING == a_pstEntry->iType))
-	{
-		if( TDR_INVALID_INDEX != a_pstEntry->idxCustomHUnitSize )
-		{
+	// ========== 日志：记录数组后缀 ==========
+	pLogFile = fopen("tdr_generate_name.log", "a");
+	if (pLogFile != NULL) {
+		fprintf(pLogFile, "[%s] 数组后缀：%s\n", szLogTime, szArray);
+		fclose(pLogFile);
+		pLogFile = NULL;
+	}
+
+	/* 字符串长度处理（force_名称也需要保留长度信息） */
+	if ((TDR_TYPE_STRING == a_pstEntry->iType) || (TDR_TYPE_WSTRING == a_pstEntry->iType)) {
+		if (TDR_INVALID_INDEX != a_pstEntry->idxCustomHUnitSize) {
 			LPTDRMACRO pstMacro = TDR_GET_MACRO_TABLE(a_pstLib);
 			TDR_STRNCPY(szMacro, pstMacro[a_pstEntry->idxCustomHUnitSize].szMacro, sizeof(szMacro));
 			tdr_strupr(szMacro);
 			sprintf(szSize, "[%s]", szMacro);
-		}else if( 0 < a_pstEntry->iCustomHUnitSize )
-		{
+		}
+		else if (0 < a_pstEntry->iCustomHUnitSize) {
 			LPTDRCTYPEINFO pstTypeInfo = tdr_idx_to_typeinfo(a_pstEntry->idxType);
-			sprintf(szSize, "[%d]", a_pstEntry->iCustomHUnitSize/pstTypeInfo->iSize);
-			
-		}else if ( 0 == a_pstEntry->iCount )
-		{
+			sprintf(szSize, "[%d]", a_pstEntry->iCustomHUnitSize / pstTypeInfo->iSize);
+		}
+		else if (0 == a_pstEntry->iCount) {
 			szSize[0] = '\0';
-		} 
-	}/*if (TDR_TYPE_STRING == a_pstEntry->iType)*/
-
-	iRet = tdr_snprintf(a_szHppName, a_iHppNameSize -1, "%s%s%s%s%s%s;", pszCustomPrefix, pszPointPrefix, pszTypePrefix, szName, szArray, szSize);
-	if ((0 > iRet) || (iRet >= (a_iHppNameSize -1)))
-	{
-		iRet = TDR_ERRIMPLE_FAILED_TO_WRITE_FILE;
-	}else
-	{
-		a_szHppName[a_iHppNameSize -1]	=	'\0';
+		}
 	}
-	
+
+	// ========== 日志：记录字符串长度后缀 ==========
+	pLogFile = fopen("tdr_generate_name.log", "a");
+	if (pLogFile != NULL) {
+		fprintf(pLogFile, "[%s] 字符串长度后缀：%s\n", szLogTime, szSize);
+		fclose(pLogFile);
+		pLogFile = NULL;
+	}
+
+	/* 拼接最终名称：force_名称仅拼接数组和长度后缀，不添加其他前缀 */
+	if (bIsForce) {
+		iRet = tdr_snprintf(a_szHppName, a_iHppNameSize - 1, "%s%s%s;", szName, szArray, szSize);
+	}
+	else {
+		iRet = tdr_snprintf(a_szHppName, a_iHppNameSize - 1, "%s%s%s%s%s%s;",
+			pszCustomPrefix, pszPointPrefix, pszTypePrefix, szName, szArray, szSize);
+	}
+
+	// ========== 日志：记录最终生成的变量名 ==========
+	pLogFile = fopen("tdr_generate_name.log", "a");
+	if (pLogFile != NULL) {
+		fprintf(pLogFile, "[%s] 最终生成变量名：%s\n", szLogTime, a_szHppName);
+		fprintf(pLogFile, "----------------------------------------\n"); // 分隔符，方便阅读
+		fclose(pLogFile);
+		pLogFile = NULL;
+	}
+
+	if ((0 > iRet) || (iRet >= (a_iHppNameSize - 1))) {
+		iRet = TDR_ERRIMPLE_FAILED_TO_WRITE_FILE;
+
+		// ========== 日志：记录错误信息 ==========
+		pLogFile = fopen("tdr_generate_name.log", "a");
+		if (pLogFile != NULL) {
+			fprintf(pLogFile, "[%s] 错误：生成名称失败，返回码：%d\n", szLogTime, iRet);
+			fprintf(pLogFile, "----------------------------------------\n");
+			fclose(pLogFile);
+			pLogFile = NULL;
+		}
+	}
+	else {
+		a_szHppName[a_iHppNameSize - 1] = '\0';
+	}
+
 	return iRet;
 }
+
+//int tdr_generate_entry_hpp_name(OUT char *a_szHppName, IN int a_iHppNameSize, IN LPTDRMETAENTRY a_pstEntry,
+//								IN LPTDRMETALIB a_pstLib, IN LPTDRHPPRULE a_pstRule)
+//{
+//	char szName[TDR_NAME_LEN] = {0};
+//	char szMacro[TDR_MACRO_LEN] = {0};
+//	char szArray[TDR_MACRO_LEN + 4] = {0};	
+//	char szSize[TDR_MACRO_LEN + 4] = {0};
+//	char *pszTypePrefix = "";
+//	char *pszCustomPrefix = "";
+//	char *pszPointPrefix = "";
+//	int iRet = TDR_SUCCESS;
+//
+//	assert(NULL != a_szHppName);
+//	assert(0 < a_iHppNameSize);
+//	assert(NULL != a_pstEntry);
+//	assert(NULL != a_pstRule);
+//	
+//
+//	/*main part of name*/
+//	TDR_STRNCPY(szName, a_pstEntry->szName, sizeof(szName));	
+//	
+//	/*custom prefix*/
+//	if (TDR_HPPRULE_ADD_CUSTOM_PREFIX & a_pstRule->iRule)
+//	{
+//		pszCustomPrefix = a_pstRule->szCustomNamePrefix;
+//	}
+//
+//	/*type prefix*/
+//	if (!(TDR_HPPRULE_NO_TYPE_PREFIX & a_pstRule->iRule))
+//	{
+//		LPTDRCTYPEINFO pstTypeInfo = tdr_idx_to_typeinfo(a_pstEntry->idxType);	
+//
+//		if ( 1 == a_pstEntry->iCount )
+//		{
+//			pszTypePrefix =	pstTypeInfo->pszSPrefix;
+//		} else
+//		{
+//			pszTypePrefix = pstTypeInfo->pszMPrefix;
+//		}
+//		if ( strlen(a_pstEntry->szName) <= 1 )
+//		{/*简单命名不加前缀*/
+//			pszTypePrefix = "";
+//		}
+//
+//		if (TDR_ENTRY_IS_REFER_TYPE(a_pstEntry) || TDR_ENTRY_IS_POINTER_TYPE(a_pstEntry))
+//		{
+//			pszPointPrefix = "p";
+//		}		
+//	}/*!(TDR_HPPRULE_NO_TYPE_PREFIX & a_pstRule->iRule)*/
+//	
+//	/*是否改变成员名首字符大小写*/
+//	if (!(TDR_HPPRULE_NO_LOWERCASE_PREFIX & a_pstRule->iRule))
+//	{
+//		if ( '\0' != pszTypePrefix[0] || ('\0' != pszPointPrefix[0]))
+//		{
+//			szName[0] =	(char )toupper(szName[0]);
+//		}else
+//		{
+//			szName[0]	=	(char)tolower(szName[0]);
+//		}
+//	}
+//	
+//
+//	/*suffix array[]*/
+//	if( TDR_INVALID_INDEX != a_pstEntry->idxCount )
+//	{
+//		LPTDRMACRO pstMacro = TDR_GET_MACRO_TABLE(a_pstLib);
+//		TDR_STRNCPY(szMacro, pstMacro[a_pstEntry->idxCount].szMacro, sizeof(szMacro));
+//		tdr_strupr(szMacro);
+//		sprintf(szArray, "[%s]", szMacro);
+//	}else if( 1 == a_pstEntry->iCount )
+//	{
+//		szArray[0] = '\0';
+//	}else if ( 0 == a_pstEntry->iCount )
+//	{
+//		sprintf(szArray, "[1]");
+//	} else
+//	{
+//		sprintf(szArray, "[%d]", a_pstEntry->iCount);
+//	}
+//
+//	/*size*/
+//	if ((TDR_TYPE_STRING == a_pstEntry->iType) || (TDR_TYPE_WSTRING == a_pstEntry->iType))
+//	{
+//		if( TDR_INVALID_INDEX != a_pstEntry->idxCustomHUnitSize )
+//		{
+//			LPTDRMACRO pstMacro = TDR_GET_MACRO_TABLE(a_pstLib);
+//			TDR_STRNCPY(szMacro, pstMacro[a_pstEntry->idxCustomHUnitSize].szMacro, sizeof(szMacro));
+//			tdr_strupr(szMacro);
+//			sprintf(szSize, "[%s]", szMacro);
+//		}else if( 0 < a_pstEntry->iCustomHUnitSize )
+//		{
+//			LPTDRCTYPEINFO pstTypeInfo = tdr_idx_to_typeinfo(a_pstEntry->idxType);
+//			sprintf(szSize, "[%d]", a_pstEntry->iCustomHUnitSize/pstTypeInfo->iSize);
+//			
+//		}else if ( 0 == a_pstEntry->iCount )
+//		{
+//			szSize[0] = '\0';
+//		} 
+//	}/*if (TDR_TYPE_STRING == a_pstEntry->iType)*/
+//
+//	iRet = tdr_snprintf(a_szHppName, a_iHppNameSize -1, "%s%s%s%s%s%s;", pszCustomPrefix, pszPointPrefix, pszTypePrefix, szName, szArray, szSize);
+//	if ((0 > iRet) || (iRet >= (a_iHppNameSize -1)))
+//	{
+//		iRet = TDR_ERRIMPLE_FAILED_TO_WRITE_FILE;
+//	}else
+//	{
+//		a_szHppName[a_iHppNameSize -1]	=	'\0';
+//	}
+//	
+//	return iRet;
+//}
 
 int tdr_metalib_to_hpp(IN LPTDRMETALIB a_pstLib, IN const char* a_pszHppFile, IN LPTDRHPPRULE a_pstRule)
 {
